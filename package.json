@@ -6,7 +6,8 @@
   "scripts": {
     "build": "pnpm run i18n:compile && vite build && oxfmt src/routeTree.gen.ts",
     "cf-typegen": "wrangler types",
-    "deploy": "pnpm run build && wrangler deploy",
+    "deploy": "pnpm run build && wrangler deploy --config dist/server/wrangler.json",
+    "deploy:dry-run": "pnpm run build && wrangler deploy --dry-run --config dist/server/wrangler.json --outdir .wrangler/dry-run",
     "dev": "vite dev",
     "format:check": "oxfmt --check",
     "format:fix": "oxfmt",
