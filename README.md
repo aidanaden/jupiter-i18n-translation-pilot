@@ -20,6 +20,12 @@ pnpm run verify:ssr
 
 The stable application displays its deployed commit and catalog timestamp in the translation dock. See [docs/LIVE_PROOF.md](docs/LIVE_PROOF.md) for the authorized cohort procedure and evidence checklist.
 
+## Native Crowdin synchronization
+
+Crowdin reads the English PO from `main` and writes approved Simplified Chinese translations to the `l10n` service branch on its hourly schedule. The maintainer merges the validated `l10n` change into `main`, and Cloudflare deploys `main`.
+
+This path uses no custom polling workflow or Crowdin token. [The live-proof runbook](docs/LIVE_PROOF.md) contains the integration settings and exceptional reset procedure.
+
 ## External proof gate
 
-Do not create or change Crowdin, Cloudflare, GitHub integration, secret, deployment, or tester resources without explicit organization authorization. The live proof must follow `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md` from monorepo commit `87ea4095342`.
+Do not create or change Crowdin, Cloudflare, GitHub integration, secret, deployment, or tester resources without explicit organization authorization. The live proof must follow `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md` from monorepo commit `89cb045147a`.
