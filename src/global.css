@@ -1,0 +1,142 @@
+@theme {
+  --text-xxs: 0.625rem;
+  --text-xxs--line-height: 1rem;
+}
+
+:root,
+.dark {
+  --background-rgb: 9 13 16;
+  --foreground: oklch(0.929 0.013 255.508);
+
+  --card: oklch(0.192 0.022 251.886);
+
+  --popover: oklch(0.192 0.022 251.886);
+
+  --primary: oklch(0.907 0.145 126.628);
+  --primary-foreground: oklch(0.156 0.009 240.407);
+  --primary-200: var(--primary);
+  --primary-300: #a1c56e;
+  --primary-400: #698453;
+  --primary-500: #415337;
+  --primary-600: #2e3c2c;
+  --primary-700: #1b2621;
+  --primary-800: #151f20;
+  --primary-900: #121a1c;
+  --primary-950: #0c1418;
+
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cad5e2;
+  --neutral-400: #90a1b9;
+  --neutral-500: #67778e;
+  --neutral-600: #495668;
+  --neutral-700: #314158;
+  --neutral-750: #253446;
+  --neutral-800: #212a36;
+  --neutral-850: #19242e;
+  --neutral-875: #10161e;
+  --neutral-900: #151e28;
+  --neutral-925: #0d151e;
+  --neutral-950: #090d10;
+  --neutral-975: #0c141d;
+
+  --secondary: oklch(0.907 0.145 126.628 / 10%);
+  --secondary-foreground: oklch(0.907 0.145 126.628);
+
+  --muted: oklch(0.282 0.026 255.733);
+  --muted-foreground: oklch(0.704 0.04 256.993);
+
+  --border: oklch(0.255 0.025 246.371);
+  --input: oklch(0.255 0.025 246.371);
+  --ring: oklch(0.565 0.041 257.416);
+
+  --destructive: oklch(0.719 0.169 13.428);
+  --destructive-foreground: oklch(0.929 0.013 255.508);
+
+  --big-input: oklch(0.231 0.023 251.483);
+  --border-strong: oklch(0.282 0.026 255.733);
+  --input-border: var(--border-strong);
+
+  --mid-foreground: oklch(0.869 0.022 252.514);
+  --faint-foreground: oklch(0.565 0.041 257.416);
+  --faint-foreground-80: oklch(0.449 0.034 256.569);
+  --scrollbar-thumb: oklch(from var(--faint-foreground) calc(l - 0.07) c h);
+
+  --white: oklch(1 0 0);
+  --black: oklch(0 0 0);
+
+  --success: oklch(0.773 0.153 163.223);
+  --success-foreground: oklch(0.929 0.013 255.508);
+  --success-strong: oklch(0.696 0.149 162.48);
+
+  --destructive-strong: oklch(0.645 0.215 16.439);
+
+  --warning: oklch(0.837 0.164 84.429);
+  --warning-strong: oklch(74.58% 0.18 56.73);
+  --warning-foreground: oklch(0.929 0.013 255.508);
+
+  --error: oklch(63.97% 0.223 7.2);
+
+  --info: oklch(0.754 0.139 232.661);
+  --info-foreground: oklch(0.929 0.013 255.508);
+
+  /* DEX stats range accents — lower (orange) / upper (fuchsia) sides of the
+     price-range meter; the strong variants are the Pool Price glyph colors. */
+  --dex-lower: #ff8904;
+  --dex-lower-strong: #f17313;
+  --dex-upper: #e12afb;
+  --dex-upper-strong: #f14af4;
+
+  /* Ethena brand colors — globally available regardless of current market scope.
+     Use these when you need the Ethena identity color even outside the Ethena theme. */
+  --ethena: oklch(76.47% 0.096 261.81);
+  --ethena-foreground: oklch(0.18 0.03 255);
+  --ethena-200: var(--ethena);
+  --ethena-300: oklch(0.72 0.12 255);
+  --ethena-400: oklch(0.67 0.14 255);
+  --ethena-500: oklch(0.62 0.16 255);
+  --ethena-600: oklch(0.56 0.15 255);
+  --ethena-700: oklch(0.48 0.13 255);
+  --ethena-800: oklch(0.4 0.11 255);
+  --ethena-900: oklch(0.3 0.08 255);
+  --ethena-950: oklch(0.22 0.06 255);
+}
+
+@layer base {
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+
+  [data-market='ethena']:not(header):not(:has(header)),
+  [data-market='ethena'] :not(header):not(header *):not(:has(header)) {
+    --primary: var(--ethena);
+    --primary-foreground: var(--ethena-foreground);
+
+    --primary-200: var(--ethena-200);
+    --primary-300: var(--ethena-300);
+    --primary-400: var(--ethena-400);
+    --primary-500: var(--ethena-500);
+    --primary-600: var(--ethena-600);
+    --primary-700: var(--ethena-700);
+    --primary-800: var(--ethena-800);
+    --primary-900: var(--ethena-900);
+    --primary-950: var(--ethena-950);
+
+    --neutral-50: #fafafa;
+    --neutral-100: #f3f3f4;
+    --neutral-200: #e4e4e7;
+    --neutral-300: #d1d1d6;
+    --neutral-400: #a1a1aa;
+    --neutral-500: #71717a;
+    --neutral-600: #52525b;
+    --neutral-700: #3f3f46;
+    --neutral-800: #27272a;
+    --neutral-850: #202024;
+    --neutral-900: #18181b;
+    --neutral-925: #111113;
+    --neutral-950: #09090b;
+    --neutral-975: #050506;
+  }
+}
