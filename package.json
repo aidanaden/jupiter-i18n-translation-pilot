@@ -19,6 +19,10 @@
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsgo --noEmit",
+    "verify:rehearsal-reset": "node scripts/reset-rehearsal-fixture.mjs --check",
+    "verify:rehearsal-reset-execution": "node scripts/verify-rehearsal-reset.mjs",
+    "verify:rehearsal-reset-plan": "node scripts/reset-rehearsal-fixture.mjs --verify-plan",
+    "verify:rehearsal-translated": "node scripts/verify-rehearsal-translated.mjs",
     "verify:ssr": "pnpm run build && node scripts/verify-ssr.mjs && oxfmt src/routeTree.gen.ts"
   },
   "dependencies": {

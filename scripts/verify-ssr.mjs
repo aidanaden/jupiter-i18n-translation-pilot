@@ -1,13 +1,22 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
+import * as z from "zod/v4-mini";
+
+import { REHEARSAL_FIXTURE } from "./rehearsal-baseline.mjs";
+
+const REHEARSAL_PSEUDO = "⟦       Ţŕàńśĺàţĩōń ŕēĥēàŕśàĺ ćōḿƥĺēţē       ⟧";
+
+const englishCatalog = await readFile("src/i18n/locales/en/messages.po", "utf8");
+const simplifiedChineseCatalog = await readFile("src/i18n/locales/zh-Hans/messages.po", "utf8");
+const rehearsalState = readRehearsalState({ englishCatalog, simplifiedChineseCatalog });
 
 const port = await new Promise((resolve, reject) => {
   const socket = createServer();
   socket.once("error", reject);
   socket.listen(0, "127.0.0.1", () => {
-    const address = socket.address();
-    assert(address && typeof address !== "string");
+    const address = z.parse(z.object({ port: z.number() }), socket.address());
     socket.close(() => resolve(address.port));
   });
 });
@@ -46,12 +55,29 @@ try {
   }
 
   const cases = [
-    { locale: "en", marker: "Review swap" },
-    { locale: "zh-Hans", marker: "查看兑换" },
-    { locale: "en-XA", marker: "Ŕēvĩēŵ śŵàƥ" },
+    {
+      locale: "en",
+      marker: "Review swap",
+      rehearsalMarker: rehearsalState === "baseline" ? null : REHEARSAL_FIXTURE.source,
+    },
+    {
+      locale: "zh-Hans",
+      marker: "查看兑换",
+      rehearsalMarker:
+        rehearsalState === "baseline"
+          ? null
+          : rehearsalState === "translated"
+            ? REHEARSAL_FIXTURE.target
+            : REHEARSAL_FIXTURE.source,
+    },
+    {
+      locale: "en-XA",
+      marker: "Ŕēvĩēŵ śŵàƥ",
+      rehearsalMarker: rehearsalState === "baseline" ? null : REHEARSAL_PSEUDO,
+    },
   ];
 
-  for (const { locale, marker } of cases) {
+  for (const { locale, marker, rehearsalMarker } of cases) {
     const response = await fetch(`${baseUrl}/?locale=${locale}&page=swap`);
     assert.equal(response.status, 200);
     const html = await response.text();
@@ -60,9 +86,39 @@ try {
     assert.ok(html.includes("/jupiter-logo.svg"));
     assert.ok(html.includes("Commit "));
     assert.ok(html.includes("Catalog "));
+    if (rehearsalMarker) {
+      assert.ok(
+        html.includes(rehearsalMarker),
+        `${locale} SSR HTML did not contain ${rehearsalMarker}`,
+      );
+    } else {
+      assert.ok(!html.includes(REHEARSAL_FIXTURE.source));
+      assert.ok(!html.includes(REHEARSAL_FIXTURE.target));
+    }
   }
 
-  console.log("SSR preview verified for en, zh-Hans, and en-XA.");
+  console.log(`SSR preview verified for en, zh-Hans, and en-XA in ${rehearsalState} state.`);
 } finally {
   preview.kill("SIGTERM");
+}
+
+function readRehearsalState({ englishCatalog, simplifiedChineseCatalog }) {
+  const englishValue = readPoValue(englishCatalog, REHEARSAL_FIXTURE.messageId);
+  const simplifiedChineseValue = readPoValue(simplifiedChineseCatalog, REHEARSAL_FIXTURE.messageId);
+
+  if (englishValue === null && simplifiedChineseValue === null) return "baseline";
+  assert.equal(englishValue, REHEARSAL_FIXTURE.source, "The rehearsal source text changed");
+  if (simplifiedChineseValue === "") return "source";
+  assert.equal(
+    simplifiedChineseValue,
+    REHEARSAL_FIXTURE.target,
+    "The rehearsal target must be empty or the reviewed fixed translation",
+  );
+  return "translated";
+}
+
+function readPoValue(catalog, messageId) {
+  const escapedMessageId = messageId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = catalog.match(new RegExp(`msgid "${escapedMessageId}"\\nmsgstr "([^"]*)"`));
+  return match?.[1] ?? null;
 }

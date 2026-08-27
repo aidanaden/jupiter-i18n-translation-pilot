@@ -54,6 +54,11 @@ msgstr ""
 msgid "baseline.swap.review"
 msgstr ""
 
+#. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
+#: src/i18n/messages.ts
+msgid "pilot.recording.proof"
+msgstr ""
+
 #. Sandbox-only empty state shown without a network request.
 #: src/i18n/messages.ts
 msgid "sandbox.onboard.unavailable"
