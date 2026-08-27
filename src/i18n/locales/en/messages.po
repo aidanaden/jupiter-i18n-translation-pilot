@@ -5,6 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
+"X-Crowdin-SourceKey: msgstr\n"
 "Language: en\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
@@ -14,73 +15,61 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as SOL, USDC, Apple Pay, Google Pay, USD, and EUR.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.buy-description"
 msgstr "Purchase {SOL} or {USDC} via {applePay}, {googlePay}, credit cards with your local currencies like {USD}, {EUR}"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.buy-title"
 msgstr "Buy crypto with local currencies"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as Coinbase, Binance, and Solana.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.cex-description"
 msgstr "Transfer your crypto funds from exchanges like {coinbase} or {binance} to your {solana} wallet directly"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.cex-title"
 msgstr "Transfer funds from Exchanges"
 
 #. Onboard section heading captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.more-ways"
 msgstr "More ways to deposit"
 
 #. Onboard page subtitle captured from the pinned Jupiter baseline. The protected placeholder renders as Solana.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.subtitle"
 msgstr "The easiest way to get started on {solana}"
 
 #. Onboard page title captured from the pinned Jupiter baseline. The protected placeholder renders as Jupiter.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.title"
 msgstr "Deposit via {jupiter}"
 
 #. Primary action that opens the fixed swap review in the translation sandbox.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.swap.review"
 msgstr "Review swap"
 
 #. Sandbox-only empty state shown without a network request.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.onboard.unavailable"
 msgstr "No deposit methods are available in this preview."
 
 #. Sandbox-only ICU select. Preserve the walletState variable.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.onboard.wallet-state"
 msgstr "{walletState, select, new {Set up your first wallet} funded {Add funds to your wallet} other {Review your wallet}}"
 
 #. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.swap.market-count"
 msgstr "{routeCount, plural, one {This route uses # market} other {This route uses # markets}}."
 
 #. Sandbox-only guidance. Preserve the link rich-text placeholder.
-#. js-lingui-explicit-id
 #: src/components/SwapExample.tsx
 msgid "sandbox.translation.guide"
 msgstr "Read the <link>translation guide</link> before editing placeholders."

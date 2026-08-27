@@ -5,6 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
+"X-Crowdin-SourceKey: msgstr\n"
 "Language: en-XA\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
@@ -14,73 +15,61 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as SOL, USDC, Apple Pay, Google Pay, USD, and EUR.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.buy-description"
 msgstr ""
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.buy-title"
 msgstr ""
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as Coinbase, Binance, and Solana.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.cex-description"
 msgstr ""
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.cex-title"
 msgstr ""
 
 #. Onboard section heading captured from the pinned Jupiter baseline.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.more-ways"
 msgstr ""
 
 #. Onboard page subtitle captured from the pinned Jupiter baseline. The protected placeholder renders as Solana.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.subtitle"
 msgstr ""
 
 #. Onboard page title captured from the pinned Jupiter baseline. The protected placeholder renders as Jupiter.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.onboard.title"
 msgstr ""
 
 #. Primary action that opens the fixed swap review in the translation sandbox.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "baseline.swap.review"
 msgstr ""
 
 #. Sandbox-only empty state shown without a network request.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.onboard.unavailable"
 msgstr ""
 
 #. Sandbox-only ICU select. Preserve the walletState variable.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.onboard.wallet-state"
 msgstr ""
 
 #. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.
-#. js-lingui-explicit-id
 #: src/i18n/messages.ts
 msgid "sandbox.swap.market-count"
 msgstr ""
 
 #. Sandbox-only guidance. Preserve the link rich-text placeholder.
-#. js-lingui-explicit-id
 #: src/components/SwapExample.tsx
 msgid "sandbox.translation.guide"
 msgstr ""

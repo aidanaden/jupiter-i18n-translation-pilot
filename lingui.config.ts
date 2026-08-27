@@ -12,7 +12,13 @@ export default defineConfig({
   fallbackLocales: {
     default: "en",
   },
-  format: formatter({ lineNumbers: false }),
+  format: formatter({
+    customHeaderAttributes: {
+      "X-Crowdin-SourceKey": "msgstr",
+    },
+    explicitIdAsDefault: true,
+    lineNumbers: false,
+  }),
   locales: ["en", "zh-Hans", "en-XA"],
   orderBy: "messageId",
   pseudoLocale: {
