@@ -1,5 +1,3 @@
-import { createStartHandler, defaultRenderHandler } from '@tanstack/react-start/server';
+import handler from "@tanstack/react-start/server-entry";
 
-const fetch = createStartHandler(defaultRenderHandler);
-
-export default { fetch };
+export default { fetch: handler.fetch };

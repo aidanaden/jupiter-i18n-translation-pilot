@@ -1,10 +1,10 @@
-import * as z from 'zod/v4-mini';
+import * as z from "zod/v4-mini";
 
-import { Locale } from './i18n/runtime';
+import { Locale } from "./i18n/runtime";
 
 export const SandboxPage = {
-  ONBOARD: 'onboard',
-  SWAP: 'swap',
+  ONBOARD: "onboard",
+  SWAP: "swap",
 } as const;
 
 const SandboxPageSchema = z.enum(SandboxPage);

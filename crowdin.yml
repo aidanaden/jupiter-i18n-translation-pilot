@@ -1,0 +1,8 @@
+preserve_hierarchy: true
+
+files:
+  - source: /src/i18n/locales/en/messages.po
+    translation: /src/i18n/locales/%locale%/messages.po
+    languages_mapping:
+      locale:
+        zh-CN: zh-Hans

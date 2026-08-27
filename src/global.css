@@ -105,12 +105,12 @@
 
 @layer base {
   button,
-  [role='button'] {
+  [role="button"] {
     cursor: pointer;
   }
 
-  [data-market='ethena']:not(header):not(:has(header)),
-  [data-market='ethena'] :not(header):not(header *):not(:has(header)) {
+  [data-market="ethena"]:not(header):not(:has(header)),
+  [data-market="ethena"] :not(header):not(header *):not(:has(header)) {
     --primary: var(--ethena);
     --primary-foreground: var(--ethena-foreground);
 

@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-import { cn } from '@jup-ag/ui/utils';
+import type { SandboxMessageId } from "../message-metadata";
 
-import type { SandboxMessageId } from '../message-metadata';
+import { cn } from "./ui";
 
 type SelectableMessageProps = {
   children: ReactNode;
@@ -29,8 +29,8 @@ export const SelectableMessage: React.FC<SelectableMessageProps> = ({
     <button
       aria-pressed={selected}
       className={cn(
-        'hover:bg-primary/5 rounded-sm text-left outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-primary',
-        selected && 'bg-primary/5 ring-primary/60 ring-1',
+        "hover:bg-primary/5 rounded-sm text-left outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-primary",
+        selected && "bg-primary/5 ring-primary/60 ring-1",
         className,
       )}
       onClick={() => onSelect(messageId)}

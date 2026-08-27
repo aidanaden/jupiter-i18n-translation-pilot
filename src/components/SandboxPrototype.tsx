@@ -1,18 +1,16 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { Button, Switch } from '@jup-ag/ui/components';
-import { cn } from '@jup-ag/ui/utils';
+import { Locale } from "../i18n/runtime";
+import { MESSAGE_METADATA, SandboxMessageId } from "../message-metadata";
+import type { SandboxMessageId as SandboxMessageIdValue } from "../message-metadata";
+import { SandboxPage } from "../sandbox-search";
+import type { SandboxPage as SandboxPageValue } from "../sandbox-search";
 
-import { Locale } from '../i18n/runtime';
-import { MESSAGE_METADATA, SandboxMessageId } from '../message-metadata';
-import type { SandboxMessageId as SandboxMessageIdValue } from '../message-metadata';
-import { SandboxPage } from '../sandbox-search';
-import type { SandboxPage as SandboxPageValue } from '../sandbox-search';
-
-import { JupiterLogo } from './JupiterLogo';
-import { OnboardExample } from './OnboardExample';
-import { SwapExample } from './SwapExample';
-import { UiIcon } from './UiIcon';
+import { JupiterLogo } from "./JupiterLogo";
+import { OnboardExample } from "./OnboardExample";
+import { SwapExample } from "./SwapExample";
+import { UiIcon } from "./UiIcon";
+import { Button, cn, Switch } from "./ui";
 
 type SandboxPrototypeProps = {
   locale: Locale;
@@ -21,7 +19,12 @@ type SandboxPrototypeProps = {
   page: SandboxPageValue;
 };
 
-export const SandboxPrototype: React.FC<SandboxPrototypeProps> = ({ locale, onLocaleChange, onPageChange, page }) => {
+export const SandboxPrototype: React.FC<SandboxPrototypeProps> = ({
+  locale,
+  onLocaleChange,
+  onPageChange,
+  page,
+}) => {
   const [routeCount, setRouteCount] = useState<1 | 3>(3);
   const [selectedMessageId, setSelectedMessageId] = useState<SandboxMessageIdValue>(() =>
     page === SandboxPage.ONBOARD ? SandboxMessageId.ONBOARD_TITLE : SandboxMessageId.REVIEW_SWAP,
@@ -35,19 +38,13 @@ export const SandboxPrototype: React.FC<SandboxPrototypeProps> = ({ locale, onLo
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      <AppHeader
-        onPageChange={onPageChange}
-        page={page}
-      />
+      <AppHeader onPageChange={onPageChange} page={page} />
       <div className="flex min-h-0 flex-1">
-        <AppRail
-          onPageChange={onPageChange}
-          page={page}
-        />
+        <AppRail onPageChange={onPageChange} page={page} />
         <main
           className={cn(
-            'flex min-h-0 w-full flex-1 items-start justify-center overflow-y-auto px-4 pb-44 pt-8 sm:px-6 sm:pb-52',
-            page === SandboxPage.SWAP ? 'sm:pt-[7vh]' : 'sm:pt-12',
+            "flex min-h-0 w-full flex-1 items-start justify-center overflow-y-auto px-4 pb-44 pt-8 sm:px-6 sm:pb-52",
+            page === SandboxPage.SWAP ? "sm:pt-[7vh]" : "sm:pt-12",
           )}
         >
           {page === SandboxPage.SWAP ? (
@@ -92,10 +89,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onPageChange, page }) => {
           aria-hidden="true"
           className="flex size-9 items-center justify-center rounded-lg text-neutral-400 sm:hidden"
         >
-          <UiIcon
-            className="size-5"
-            name="menu"
-          />
+          <UiIcon className="size-5" name="menu" />
         </span>
         <div className="flex items-center gap-2">
           <JupiterLogo className="size-7 shrink-0" />
@@ -124,12 +118,11 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onPageChange, page }) => {
         aria-hidden="true"
         className="ml-auto hidden h-9 w-full max-w-72 items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 text-left text-xs text-neutral-500 lg:flex"
       >
-        <UiIcon
-          className="size-4"
-          name="search"
-        />
+        <UiIcon className="size-4" name="search" />
         Search tokens and addresses
-        <span className="ml-auto rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-600">/</span>
+        <span className="ml-auto rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] text-neutral-600">
+          /
+        </span>
       </div>
       <div className="flex items-center gap-1">
         <HeaderIcon icon="gift" />
@@ -145,16 +138,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onPageChange, page }) => {
   );
 };
 
-const HeaderIcon: React.FC<{ icon: 'gift' | 'settings' }> = ({ icon }) => {
+const HeaderIcon: React.FC<{ icon: "gift" | "settings" }> = ({ icon }) => {
   return (
     <span
       aria-hidden="true"
       className="hidden size-9 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 text-neutral-400 sm:flex"
     >
-      <UiIcon
-        className="size-4"
-        name={icon}
-      />
+      <UiIcon className="size-4" name={icon} />
     </span>
   );
 };
@@ -168,10 +158,10 @@ type PageButtonProps = {
 const PageButton: React.FC<PageButtonProps> = ({ active, label, onClick }) => {
   return (
     <button
-      aria-current={active ? 'page' : undefined}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        'rounded-md px-3 py-1.5 text-xs font-medium transition sm:px-4',
-        active ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-500 hover:text-neutral-200',
+        "rounded-md px-3 py-1.5 text-xs font-medium transition sm:px-4",
+        active ? "bg-neutral-700 text-neutral-100" : "text-neutral-500 hover:text-neutral-200",
       )}
       onClick={onClick}
       type="button"
@@ -209,7 +199,7 @@ const AppRail: React.FC<AppHeaderProps> = ({ onPageChange, page }) => {
 
 type RailButtonProps = {
   active: boolean;
-  icon: 'swap' | 'wallet';
+  icon: "swap" | "wallet";
   label: string;
   onClick: () => void;
 };
@@ -219,30 +209,24 @@ const RailButton: React.FC<RailButtonProps> = ({ active, icon, label, onClick })
     <button
       aria-label={label}
       className={cn(
-        'mb-1 flex size-10 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-900 hover:text-neutral-200',
-        active && 'bg-neutral-800 text-primary',
+        "mb-1 flex size-10 items-center justify-center rounded-xl text-neutral-500 transition hover:bg-neutral-900 hover:text-neutral-200",
+        active && "bg-neutral-800 text-primary",
       )}
       onClick={onClick}
       type="button"
     >
-      <UiIcon
-        className="size-5"
-        name={icon}
-      />
+      <UiIcon className="size-5" name={icon} />
     </button>
   );
 };
 
-const RailIcon: React.FC<{ icon: 'chart' | 'layers' | 'more' }> = ({ icon }) => {
+const RailIcon: React.FC<{ icon: "chart" | "layers" | "more" }> = ({ icon }) => {
   return (
     <span
       aria-hidden="true"
       className="mb-1 flex size-10 items-center justify-center rounded-xl text-neutral-500"
     >
-      <UiIcon
-        className="size-5"
-        name={icon}
-      />
+      <UiIcon className="size-5" name={icon} />
     </span>
   );
 };
@@ -270,13 +254,10 @@ const TranslationDock: React.FC<TranslationDockProps> = ({
     <aside
       aria-label="Translation controls"
       className="bg-neutral-900/95 relative z-50 mx-3 mb-3 max-w-2xl shrink-0 overflow-y-auto rounded-2xl border border-neutral-700 p-3 shadow-2xl shadow-black/50 backdrop-blur-xl sm:fixed sm:inset-x-3 sm:bottom-4 sm:mx-auto sm:mb-0"
-      style={{ maxHeight: 'calc(100vh - 2rem)' }}
+      style={{ maxHeight: "calc(100vh - 2rem)" }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <TranslationModeControl
-          enabled={translationMode}
-          onChange={onTranslationModeChange}
-        />
+        <TranslationModeControl enabled={translationMode} onChange={onTranslationModeChange} />
         <LocaleControl
           locale={locale}
           onLocaleChange={onLocaleChange}
@@ -291,14 +272,18 @@ const TranslationDock: React.FC<TranslationDockProps> = ({
           selectedMessageId={selectedMessageId}
         />
       )}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[10px] text-neutral-500">
+        <span>Commit {__DEPLOYED_COMMIT__}</span>
+        <span>Catalog {__CATALOG_TIMESTAMP__}</span>
+      </div>
     </aside>
   );
 };
 
-const TranslationModeControl: React.FC<{ enabled: boolean; onChange: (enabled: boolean) => void }> = ({
-  enabled,
-  onChange,
-}) => {
+const TranslationModeControl: React.FC<{
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}> = ({ enabled, onChange }) => {
   return (
     <div className="flex items-center gap-2 text-xs font-medium text-mid-foreground">
       <Switch
@@ -361,8 +346,8 @@ const LocaleButton: React.FC<LocaleButtonProps> = ({ active, label, locale, onLo
     <button
       aria-pressed={active}
       className={cn(
-        'min-w-8 rounded-md px-2 py-1 text-xs font-medium transition',
-        active ? 'bg-white/10 text-neutral-100' : 'text-faint-foreground hover:text-neutral-100',
+        "min-w-8 rounded-md px-2 py-1 text-xs font-medium transition",
+        active ? "bg-white/10 text-neutral-100" : "text-faint-foreground hover:text-neutral-100",
       )}
       onClick={() => onLocaleChange(locale)}
       type="button"
@@ -393,7 +378,9 @@ const MessageInspector: React.FC<MessageInspectorProps> = ({
       className="mt-3 border-t border-white/10 pt-3"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="bg-primary/10 rounded-full px-2 py-1 text-xs font-medium text-primary">{metadata.kind}</span>
+        <span className="bg-primary/10 rounded-full px-2 py-1 text-xs font-medium text-primary">
+          {metadata.kind}
+        </span>
         <span className="text-xs text-faint-foreground">{locale}</span>
       </div>
       <code className="mt-3 block break-all text-xs text-mid-foreground">{selectedMessageId}</code>
@@ -415,13 +402,7 @@ const MessageInspector: React.FC<MessageInspectorProps> = ({
         </div>
       )}
 
-      <Button
-        className="mt-4 w-full"
-        disabled
-        size="sm"
-        type="button"
-        variant="secondary"
-      >
+      <Button className="mt-4 w-full" disabled size="sm" type="button" variant="secondary">
         Crowdin link pending
       </Button>
     </section>
@@ -438,7 +419,10 @@ const PreviewValueButton: React.FC<PreviewValueButtonProps> = ({ active, label, 
   return (
     <button
       aria-pressed={active}
-      className={cn('rounded-md px-2 py-1 text-xs', active ? 'bg-primary text-primary-foreground' : 'bg-white/6')}
+      className={cn(
+        "rounded-md px-2 py-1 text-xs",
+        active ? "bg-primary text-primary-foreground" : "bg-white/6",
+      )}
       onClick={onClick}
       type="button"
     >

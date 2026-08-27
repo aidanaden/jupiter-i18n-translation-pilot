@@ -1,13 +1,13 @@
-import { setupI18n, type I18n } from '@lingui/core';
+import { setupI18n, type I18n } from "@lingui/core";
 
-import { messages as pseudoMessages } from './locales/en-XA/messages';
-import { messages as englishMessages } from './locales/en/messages';
-import { messages as simplifiedChineseMessages } from './locales/zh-Hans/messages';
+import { messages as pseudoMessages } from "./locales/en-XA/messages";
+import { messages as englishMessages } from "./locales/en/messages";
+import { messages as simplifiedChineseMessages } from "./locales/zh-Hans/messages";
 
 export const Locale = {
-  ENGLISH: 'en',
-  PSEUDO: 'en-XA',
-  SIMPLIFIED_CHINESE: 'zh-Hans',
+  ENGLISH: "en",
+  PSEUDO: "en-XA",
+  SIMPLIFIED_CHINESE: "zh-Hans",
 } as const;
 
 export type Locale = (typeof Locale)[keyof typeof Locale];

@@ -1,13 +1,11 @@
-import { Trans, useLingui } from '@lingui/react';
+import { Trans, useLingui } from "@lingui/react";
 
-import { Button } from '@jup-ag/ui/components';
-import { cn } from '@jup-ag/ui/utils';
+import { REVIEW_SWAP_MESSAGE, ROUTE_MARKET_COUNT_MESSAGE } from "../i18n/messages";
+import { SandboxMessageId } from "../message-metadata";
+import type { SandboxMessageId as SandboxMessageIdValue } from "../message-metadata";
 
-import { REVIEW_SWAP_MESSAGE, ROUTE_MARKET_COUNT_MESSAGE } from '../i18n/messages';
-import { SandboxMessageId } from '../message-metadata';
-import type { SandboxMessageId as SandboxMessageIdValue } from '../message-metadata';
-
-import { UiIcon } from './UiIcon';
+import { UiIcon } from "./UiIcon";
+import { Button, cn } from "./ui";
 
 type SwapExampleProps = {
   onMessageSelect: (messageId: SandboxMessageIdValue) => void;
@@ -40,20 +38,21 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
       <div className="rounded-3xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl shadow-black/25">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-5">
-            <span className="border-b-2 border-primary pb-2 text-sm font-semibold text-neutral-100">Market</span>
+            <span className="border-b-2 border-primary pb-2 text-sm font-semibold text-neutral-100">
+              Market
+            </span>
             <span className="pb-2 text-sm font-medium text-neutral-500">Limit</span>
             <span className="pb-2 text-sm font-medium text-neutral-500">Recurring</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="bg-primary/10 rounded-md px-2 py-1 text-[11px] font-semibold text-primary">Ultra</span>
+            <span className="bg-primary/10 rounded-md px-2 py-1 text-[11px] font-semibold text-primary">
+              Ultra
+            </span>
             <span
               aria-hidden="true"
               className="flex size-8 items-center justify-center rounded-lg text-neutral-500"
             >
-              <UiIcon
-                className="size-4"
-                name="sliders"
-              />
+              <UiIcon className="size-4" name="sliders" />
             </span>
           </div>
         </div>
@@ -70,10 +69,7 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
             aria-hidden="true"
             className="flex size-10 items-center justify-center rounded-xl border-4 border-neutral-950 bg-neutral-800 text-neutral-100 shadow-lg"
           >
-            <UiIcon
-              className="size-4"
-              name="swap"
-            />
+            <UiIcon className="size-4" name="swap" />
           </span>
         </div>
         <TokenField
@@ -87,9 +83,11 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
         <button
           aria-pressed={translationMode && selectedMessageId === SandboxMessageId.MARKET_COUNT}
           className={cn(
-            'mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-neutral-500 transition',
-            translationMode && 'hover:bg-primary/5',
-            translationMode && selectedMessageId === SandboxMessageId.MARKET_COUNT && 'ring-primary/60 ring-1',
+            "mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-neutral-500 transition",
+            translationMode && "hover:bg-primary/5",
+            translationMode &&
+              selectedMessageId === SandboxMessageId.MARKET_COUNT &&
+              "ring-primary/60 ring-1",
           )}
           disabled={!translationMode}
           onClick={() => translationMode && onMessageSelect(SandboxMessageId.MARKET_COUNT)}
@@ -102,8 +100,9 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
         {translationMode && (
           <div
             className={cn(
-              'border-primary/35 bg-primary/5 mx-1 mt-1 flex items-start gap-3 rounded-xl border border-dashed px-3 py-2 text-xs leading-5 text-muted-foreground',
-              selectedMessageId === SandboxMessageId.GUIDE && 'ring-primary/40 border-primary ring-1',
+              "border-primary/35 bg-primary/5 mx-1 mt-1 flex items-start gap-3 rounded-xl border border-dashed px-3 py-2 text-xs leading-5 text-muted-foreground",
+              selectedMessageId === SandboxMessageId.GUIDE &&
+                "ring-primary/40 border-primary ring-1",
             )}
           >
             <p className="min-w-0 flex-1">
@@ -136,9 +135,9 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
         {translationMode ? (
           <Button
             className={cn(
-              'mt-2 h-14 w-full rounded-xl text-base font-semibold',
+              "mt-2 h-14 w-full rounded-xl text-base font-semibold",
               selectedMessageId === SandboxMessageId.REVIEW_SWAP &&
-                'ring-2 ring-primary ring-offset-2 ring-offset-card',
+                "ring-2 ring-primary ring-offset-2 ring-offset-card",
             )}
             onClick={() => onMessageSelect(SandboxMessageId.REVIEW_SWAP)}
             type="button"
@@ -172,23 +171,22 @@ const TokenField: React.FC<TokenFieldProps> = ({ amount, label, symbol, tokenCla
       </div>
       <div className="mt-5 flex items-center justify-between gap-4">
         <div>
-          <div className="text-[32px] font-medium leading-none tracking-tight text-neutral-100">{amount}</div>
+          <div className="text-[32px] font-medium leading-none tracking-tight text-neutral-100">
+            {amount}
+          </div>
           <div className="mt-1 text-xs text-faint-foreground">{usd}</div>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-900 py-1.5 pl-1.5 pr-3 text-sm font-semibold text-neutral-100 shadow-sm">
           <span
             className={cn(
-              'flex size-8 items-center justify-center rounded-full bg-gradient-to-br text-[10px] text-white',
+              "flex size-8 items-center justify-center rounded-full bg-gradient-to-br text-[10px] text-white",
               tokenClassName,
             )}
           >
-            {symbol === 'SOL' ? 'S' : '$'}
+            {symbol === "SOL" ? "S" : "$"}
           </span>
           {symbol}
-          <UiIcon
-            className="size-3 text-faint-foreground"
-            name="caret-down"
-          />
+          <UiIcon className="size-3 text-faint-foreground" name="caret-down" />
         </div>
       </div>
     </div>

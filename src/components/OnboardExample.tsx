@@ -1,7 +1,5 @@
-import { useLingui } from '@lingui/react';
-import { useState } from 'react';
-
-import { cn } from '@jup-ag/ui/utils';
+import { useLingui } from "@lingui/react";
+import { useState } from "react";
 
 import {
   ONBOARD_BUY_DESCRIPTION_MESSAGE,
@@ -14,21 +12,22 @@ import {
   ONBOARD_TITLE_MESSAGE,
   ONBOARD_UNAVAILABLE_MESSAGE,
   ONBOARD_WALLET_STATE_MESSAGE,
-} from '../i18n/messages';
-import { SandboxMessageId } from '../message-metadata';
-import type { SandboxMessageId as SandboxMessageIdValue } from '../message-metadata';
+} from "../i18n/messages";
+import { SandboxMessageId } from "../message-metadata";
+import type { SandboxMessageId as SandboxMessageIdValue } from "../message-metadata";
 
-import { SelectableMessage } from './SelectableMessage';
-import { UiIcon } from './UiIcon';
+import { SelectableMessage } from "./SelectableMessage";
+import { UiIcon } from "./UiIcon";
+import { cn } from "./ui";
 
 const WalletState = {
-  FUNDED: 'funded',
-  NEW: 'new',
+  FUNDED: "funded",
+  NEW: "new",
 } as const;
 
 type WalletState = (typeof WalletState)[keyof typeof WalletState];
 
-type DepositAvailability = { kind: 'available' } | { kind: 'unavailable' };
+type DepositAvailability = { kind: "available" } | { kind: "unavailable" };
 
 type OnboardExampleProps = {
   onMessageSelect: (messageId: SandboxMessageIdValue) => void;
@@ -42,7 +41,7 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
   translationMode,
 }) => {
   const { i18n } = useLingui();
-  const [availability, setAvailability] = useState<DepositAvailability>({ kind: 'available' });
+  const [availability, setAvailability] = useState<DepositAvailability>({ kind: "available" });
   const [walletState, setWalletState] = useState<WalletState>(WalletState.NEW);
   const walletStateCopy = i18n._({
     ...ONBOARD_WALLET_STATE_MESSAGE,
@@ -85,7 +84,9 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-neutral-100">Deposit</h2>
-            <span className="rounded-md bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">Preview</span>
+            <span className="rounded-md bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">
+              Preview
+            </span>
           </div>
           <div
             aria-label="Deposit preview state"
@@ -93,22 +94,22 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
             role="group"
           >
             <PreviewButton
-              active={availability.kind === 'available'}
+              active={availability.kind === "available"}
               label="Methods"
-              onClick={() => setAvailability({ kind: 'available' })}
+              onClick={() => setAvailability({ kind: "available" })}
             />
             <PreviewButton
-              active={availability.kind === 'unavailable'}
+              active={availability.kind === "unavailable"}
               label="Empty state"
               onClick={() => {
-                setAvailability({ kind: 'unavailable' });
+                setAvailability({ kind: "unavailable" });
                 if (translationMode) onMessageSelect(SandboxMessageId.ONBOARD_UNAVAILABLE);
               }}
             />
           </div>
         </div>
 
-        {availability.kind === 'available' ? (
+        {availability.kind === "available" ? (
           <div className="mt-5 space-y-3">
             <div className="rounded-2xl bg-neutral-900 p-4">
               <div className="flex items-center justify-between text-xs text-neutral-500">
@@ -117,19 +118,13 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
               </div>
               <div className="mt-3 flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-300">
-                  <UiIcon
-                    className="size-5"
-                    name="wallet"
-                  />
+                  <UiIcon className="size-5" name="wallet" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-neutral-200">Connected wallet preview</p>
                   <p className="mt-0.5 truncate text-xs text-neutral-500">9WzD...sandbox</p>
                 </div>
-                <UiIcon
-                  className="ml-auto size-4 text-neutral-500"
-                  name="caret-down"
-                />
+                <UiIcon className="ml-auto size-4 text-neutral-500" name="caret-down" />
               </div>
             </div>
             <div className="rounded-2xl bg-big-input p-4">
@@ -139,7 +134,9 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
               </div>
               <div className="mt-4 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[32px] font-medium leading-none tracking-tight text-neutral-100">100</p>
+                  <p className="text-[32px] font-medium leading-none tracking-tight text-neutral-100">
+                    100
+                  </p>
                   <p className="mt-2 text-xs text-neutral-500">$100.00</p>
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-900 py-1.5 pl-1.5 pr-3 text-sm font-semibold text-neutral-100">
@@ -147,10 +144,7 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
                     $
                   </span>
                   USDC
-                  <UiIcon
-                    className="size-3 text-neutral-500"
-                    name="caret-down"
-                  />
+                  <UiIcon className="size-3 text-neutral-500" name="caret-down" />
                 </div>
               </div>
             </div>
@@ -164,10 +158,7 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-border-strong bg-neutral-900 px-5 py-12 text-center">
             <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-secondary text-lg text-secondary-foreground">
-              <UiIcon
-                className="size-5"
-                name="tray"
-              />
+              <UiIcon className="size-5" name="tray" />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               <SelectableMessage
@@ -202,7 +193,10 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
             </h3>
             <div className="mt-4 flex flex-col gap-3">
               <DepositMethodCard
-                description={i18n._({ ...ONBOARD_BUY_DESCRIPTION_MESSAGE, values: ONBOARD_PROTECTED_VALUES })}
+                description={i18n._({
+                  ...ONBOARD_BUY_DESCRIPTION_MESSAGE,
+                  values: ONBOARD_PROTECTED_VALUES,
+                })}
                 descriptionId={SandboxMessageId.ONBOARD_BUY_DESCRIPTION}
                 icon="credit-card"
                 onMessageSelect={onMessageSelect}
@@ -213,7 +207,10 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
               />
               <OrDivider />
               <DepositMethodCard
-                description={i18n._({ ...ONBOARD_CEX_DESCRIPTION_MESSAGE, values: ONBOARD_PROTECTED_VALUES })}
+                description={i18n._({
+                  ...ONBOARD_CEX_DESCRIPTION_MESSAGE,
+                  values: ONBOARD_PROTECTED_VALUES,
+                })}
                 descriptionId={SandboxMessageId.ONBOARD_CEX_DESCRIPTION}
                 icon="buildings"
                 onMessageSelect={onMessageSelect}
@@ -226,14 +223,13 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
           </div>
 
           <div className="rounded-xl border border-border-strong bg-neutral-950 p-4">
-            <h3 className="text-center text-sm font-semibold text-neutral-200 md:text-lg">Wallet state preview</h3>
+            <h3 className="text-center text-sm font-semibold text-neutral-200 md:text-lg">
+              Wallet state preview
+            </h3>
             <div className="mt-4 rounded-lg bg-neutral-900 p-4">
               <div className="flex items-center gap-3">
                 <div className="bg-primary/10 flex size-11 shrink-0 items-center justify-center rounded-full text-primary">
-                  <UiIcon
-                    className="size-5"
-                    name="wallet"
-                  />
+                  <UiIcon className="size-5" name="wallet" />
                 </div>
                 <div>
                   <p className="text-xs text-neutral-500">Synthetic account state</p>
@@ -274,10 +270,7 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
             </div>
             <div className="mt-3 flex items-center gap-3 rounded-lg bg-neutral-900 p-4 text-sm text-neutral-400">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-info/10 text-info">
-                <UiIcon
-                  className="size-4"
-                  name="shield"
-                />
+                <UiIcon className="size-4" name="shield" />
               </span>
               No wallet connection or funds are used in this sandbox.
             </div>
@@ -291,7 +284,7 @@ export const OnboardExample: React.FC<OnboardExampleProps> = ({
 type DepositMethodCardProps = {
   description: string;
   descriptionId: SandboxMessageIdValue;
-  icon: 'buildings' | 'credit-card';
+  icon: "buildings" | "credit-card";
   onMessageSelect: (messageId: SandboxMessageIdValue) => void;
   selectedMessageId: SandboxMessageIdValue;
   title: string;
@@ -321,10 +314,7 @@ const DepositMethodCard: React.FC<DepositMethodCardProps> = ({
           >
             {title}
           </SelectableMessage>
-          <UiIcon
-            className="ml-1 inline-block size-3 text-neutral-500"
-            name="arrow-up-right"
-          />
+          <UiIcon className="ml-1 inline-block size-3 text-neutral-500" name="arrow-up-right" />
         </h4>
         <p className="mt-2 text-xs leading-5 text-neutral-500 md:text-sm">
           <SelectableMessage
@@ -338,10 +328,7 @@ const DepositMethodCard: React.FC<DepositMethodCardProps> = ({
         </p>
       </div>
       <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-primary">
-        <UiIcon
-          className="size-5"
-          name={icon}
-        />
+        <UiIcon className="size-5" name={icon} />
       </div>
     </div>
   );
@@ -368,8 +355,8 @@ const PreviewButton: React.FC<PreviewButtonProps> = ({ active, label, onClick })
     <button
       aria-pressed={active}
       className={cn(
-        'flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition',
-        active ? 'bg-white/10 text-foreground' : 'text-faint-foreground hover:text-foreground',
+        "flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition",
+        active ? "bg-white/10 text-foreground" : "text-faint-foreground hover:text-foreground",
       )}
       onClick={onClick}
       type="button"

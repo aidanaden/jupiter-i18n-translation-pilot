@@ -1,5 +1,3 @@
-import jupiterLogoUrl from '../../../jupusd/public/jupiter-logo.svg?url';
-
 export const JupiterLogo: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <img
@@ -7,7 +5,7 @@ export const JupiterLogo: React.FC<{ className?: string }> = ({ className }) => 
       aria-hidden="true"
       className={className}
       height={32}
-      src={jupiterLogoUrl}
+      src="/jupiter-logo.svg"
       width={33}
     />
   );
