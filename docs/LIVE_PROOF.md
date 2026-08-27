@@ -4,6 +4,8 @@ Use this runbook only after a Jupiter organization admin authorizes the reposito
 
 The controlling architecture is `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md` at monorepo commit `87ea4095342`. Record links and timestamps in the authorized internal evidence location, not in this public repository.
 
+A public repository under the maintainer's personal GitHub account may be used for pre-flight CI, integration, and deployment checks. It does not satisfy the ownership and permission proof. Transfer it to TeamRaccoons, reauthorize the Crowdin and Cloudflare GitHub Apps, restore branch protection, and verify the organization-owned deployment before inviting the real cohort.
+
 ## Before the cohort
 
 1. Tag the reviewed baseline and confirm the Worker serves that commit.
