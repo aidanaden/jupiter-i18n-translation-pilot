@@ -67,7 +67,7 @@ msgstr "{walletState, select, new {设置您的第一个钱包} funded {向您�
 #. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.
 #: src/i18n/messages.ts
 msgid "sandbox.swap.market-count"
-msgstr "此路线使用 {routeCount} 个市场。"
+msgstr "{routeCount, plural, other {此路线使用 # 个市场。}}"
 
 #. Sandbox-only guidance. Preserve the link rich-text placeholder.
 #: src/components/SwapExample.tsx
