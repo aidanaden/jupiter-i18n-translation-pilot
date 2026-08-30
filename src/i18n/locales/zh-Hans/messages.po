@@ -9,7 +9,7 @@ msgstr ""
 "Language: zh\n"
 "Project-Id-Version: jupiter-i18n-translation-pilot\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-27 02:31\n"
+"PO-Revision-Date: 2026-08-30 04:02\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Simplified\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -58,6 +58,11 @@ msgstr "Deposit via {jupiter}"
 #: src/i18n/messages.ts
 msgid "baseline.swap.review"
 msgstr "Review swap"
+
+#. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
+#: src/i18n/messages.ts
+msgid "pilot.recording.proof"
+msgstr "Translation rehearsal complete"
 
 #. Sandbox-only empty state shown without a network request.
 #: src/i18n/messages.ts
