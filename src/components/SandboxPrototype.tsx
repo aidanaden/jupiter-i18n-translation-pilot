@@ -1,5 +1,7 @@
+import { useLingui } from "@lingui/react";
 import { useState } from "react";
 
+import { TRANSLATION_REHEARSAL_PROOF_MESSAGE } from "../i18n/messages";
 import { Locale } from "../i18n/runtime";
 import { MESSAGE_METADATA, SandboxMessageId } from "../message-metadata";
 import type { SandboxMessageId as SandboxMessageIdValue } from "../message-metadata";
@@ -250,6 +252,8 @@ const TranslationDock: React.FC<TranslationDockProps> = ({
   selectedMessageId,
   translationMode,
 }) => {
+  const { i18n } = useLingui();
+
   return (
     <aside
       aria-label="Translation controls"
@@ -272,6 +276,12 @@ const TranslationDock: React.FC<TranslationDockProps> = ({
           selectedMessageId={selectedMessageId}
         />
       )}
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs">
+        <span className="text-neutral-500">Rehearsal proof</span>
+        <strong className="text-right font-medium text-neutral-200">
+          {i18n._(TRANSLATION_REHEARSAL_PROOF_MESSAGE)}
+        </strong>
+      </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[10px] text-neutral-500">
         <span>Commit {__DEPLOYED_COMMIT__}</span>
         <span>Catalog {__CATALOG_TIMESTAMP__}</span>

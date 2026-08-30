@@ -65,6 +65,12 @@ export const REVIEW_SWAP_MESSAGE = /* i18n */ {
   message: "Review swap",
 };
 
+export const TRANSLATION_REHEARSAL_PROOF_MESSAGE = /* i18n */ {
+  comment: "Synthetic proof message used only by the autonomous end-to-end translation rehearsal.",
+  id: "pilot.recording.proof",
+  message: "Translation rehearsal complete",
+};
+
 export const ONBOARD_UNAVAILABLE_MESSAGE = /* i18n */ {
   comment: "Sandbox-only empty state shown without a network request.",
   id: "sandbox.onboard.unavailable",
