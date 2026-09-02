@@ -1,0 +1,38 @@
+name: Export approved Crowdin translations
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require the verified Crowdin branch
+        env:
+          CROWDIN_BRANCH_NAME: ${{ vars.CROWDIN_BRANCH_NAME }}
+        run: test -n "$CROWDIN_BRANCH_NAME"
+      - uses: crowdin/github-action@71fdb8814261dd703be4ca7c6450d21b1868da4b
+        with:
+          upload_sources: false
+          upload_translations: false
+          download_translations: true
+          download_language: zh-CN
+          export_only_approved: true
+          skip_untranslated_strings: true
+          push_translations: true
+          localization_branch_name: l10n
+          create_pull_request: true
+          pull_request_base_branch_name: main
+          crowdin_branch_name: ${{ vars.CROWDIN_BRANCH_NAME }}
+          config: crowdin.yml
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

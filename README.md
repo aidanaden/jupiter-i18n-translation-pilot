@@ -20,11 +20,11 @@ pnpm run verify:ssr
 
 The stable application displays its deployed commit and catalog timestamp in the translation dock. See [docs/LIVE_PROOF.md](docs/LIVE_PROOF.md) for the authorized cohort procedure and evidence checklist.
 
-## Native Crowdin synchronization
+## Scheduled Crowdin export
 
-Crowdin reads the English PO from `main` and writes approved Simplified Chinese translations to the `l10n` service branch on its hourly schedule. The maintainer merges the validated `l10n` change into `main`, and Cloudflare deploys `main`.
+Crowdin's native GitHub integration reads the English PO from `main`. Its translation schedule stays disabled. The pinned official Crowdin GitHub Action downloads approved Simplified Chinese translations at minute 17 of each hour, writes the machine-owned `l10n` branch, and opens a pull request to `main`. The maintainer merges the validated pull request, and Cloudflare deploys `main`.
 
-This path uses no custom polling workflow or Crowdin token. [The live-proof runbook](docs/LIVE_PROOF.md) contains the integration settings and exceptional reset procedure.
+The workflow requires a pilot-only Crowdin token and an explicit `CROWDIN_BRANCH_NAME` repository variable. It stops before export when that variable is missing. [The live-proof runbook](docs/LIVE_PROOF.md) contains the integration settings and exceptional reset procedure.
 
 ## External proof gate
 
