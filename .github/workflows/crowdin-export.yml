@@ -14,10 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Require the verified Crowdin branch
+      - name: Verify the live Crowdin branch
         env:
+          CROWDIN_BRANCH_ID: ${{ vars.CROWDIN_BRANCH_ID }}
           CROWDIN_BRANCH_NAME: ${{ vars.CROWDIN_BRANCH_NAME }}
-        run: test -n "$CROWDIN_BRANCH_NAME"
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+        run: node scripts/verify-crowdin-export-branch.mjs
       - uses: crowdin/github-action@71fdb8814261dd703be4ca7c6450d21b1868da4b
         with:
           upload_sources: false

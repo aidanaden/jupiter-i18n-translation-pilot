@@ -12,31 +12,29 @@ A public repository under the maintainer's personal GitHub account may be used f
 2. Confirm Crowdin and Cloudflare show Free plans with no subscription or trial countdown.
 3. Confirm each translator has an individual account. One maintainer owns review and approval.
 4. Confirm the Crowdin integration reads sources from `main`.
-5. Confirm the native translation Sync Schedule is empty.
-6. Confirm the existing Simplified Chinese baseline was imported once.
-7. Confirm **Always import translations** is disabled.
-8. Confirm the scheduled export workflow pins the reviewed Crowdin Action commit.
-9. Confirm the workflow disables both uploads, downloads only approved `zh-CN`, skips untranslated strings, writes `l10n`, and targets `main`.
-10. Confirm `CROWDIN_BRANCH_NAME` matches the live Crowdin version branch.
-11. Confirm the Crowdin token is limited to this pilot and the scopes proven by the export canary.
-12. Confirm GitHub Actions may create pull requests but has read-only default permissions.
-13. Confirm `main` requires a pull request and the `verify` check with no bypass.
-14. Confirm Cloudflare deploys `main` as its production branch.
-15. Assign each translator a disjoint message. Assign two translators one controlled same-message collision.
-16. Record the baseline PO commit, Worker URL, catalog timestamp, participant roles, and UTC start time.
+5. Confirm the Crowdin integration writes translations to `l10n`.
+6. Confirm the Crowdin integration synchronizes hourly.
+7. Confirm the Crowdin integration exports only approved translations.
+8. Confirm one-time translation import is enabled.
+9. Confirm **Always import translations** is disabled.
+10. Confirm Crowdin's integration commit message does not contain `[ci skip]`.
+11. Confirm the repository has no custom Crowdin polling workflow or Crowdin token.
+12. Confirm Cloudflare deploys `main` as its production branch.
+13. Assign each translator a disjoint message. Assign two translators one controlled same-message collision.
+14. Record the baseline PO commit, Worker URL, catalog timestamp, participant roles, and UTC start time.
 
 ## Cohort release
 
 1. Have translators work concurrently. Keep protected ICU variables and rich-text placeholders unchanged.
 2. Confirm Crowdin records individual attribution for disjoint edits and both collision attempts.
 3. Have the maintainer choose the collision result, then review and approve the complete cohort.
-4. Wait for the scheduled Action to update `l10n` with one reviewed `zh-Hans/messages.po` change.
+4. Wait for the native hourly synchronization to update `l10n` with one reviewed `zh-Hans/messages.po` change.
 5. Reject source, configuration, generated-code, or unrelated file changes.
 6. Merge `l10n` into `main` only after CI passes.
 7. Record the review-complete, `l10n` update, merge, deployment-start, and stable-live timestamps.
 8. Verify desktop and 390×844 mobile layouts for English, Simplified Chinese, and `en-XA`. Check locale hydration, inspector metadata, horizontal overflow, and browser errors.
 
-The release passes only if one scheduled Action run updates `l10n` without a manual PO upload. GitHub does not guarantee that every scheduled job runs on time, so record any delay or dropped run as a scheduler failure. After the maintainer merges the validated change, Cloudflare must update the stable Worker without a manual deployment.
+The release passes only if Crowdin updates `l10n` within one hourly synchronization cycle without a manual PO upload. After the maintainer merges the validated change, Cloudflare must update the stable Worker without a manual deployment.
 
 ## Evidence to retain
 
