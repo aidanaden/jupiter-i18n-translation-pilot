@@ -28,4 +28,4 @@ The workflow requires a pilot-only Crowdin token and explicit `CROWDIN_BRANCH_NA
 
 ## External proof gate
 
-Do not create or change Crowdin, Cloudflare, GitHub integration, secret, deployment, or tester resources without explicit organization authorization. The live proof must follow `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md` from monorepo commit `89cb045147a`.
+Do not create or change Crowdin, Cloudflare, GitHub integration, secret, deployment, or tester resources without explicit organization authorization. The live proof must follow `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md` from monorepo commit `dc8a2b5dc71`.
