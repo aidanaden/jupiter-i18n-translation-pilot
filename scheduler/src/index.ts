@@ -14,7 +14,7 @@ const SCHEDULER_NAME = "crowdin-export";
 
 type Env = Omit<SchedulerEnv, "CROWDIN_SCHEDULER"> & {
   CROWDIN_SCHEDULER: DurableObjectNamespace<CrowdinExportScheduler>;
-  GITHUB_DISPATCH_TOKEN: string;
+  GITHUB_DISPATCH_TOKEN: string | undefined;
 };
 
 class SchedulerStorage {
@@ -68,7 +68,7 @@ export class CrowdinExportScheduler extends DurableObject<Env> {
         owner: "aidanaden",
         ref: "main",
         repository: "jupiter-i18n-translation-pilot",
-        token: parseGitHubToken(this.#env.GITHUB_DISPATCH_TOKEN),
+        token: this.#env.GITHUB_DISPATCH_TOKEN,
         workflow: "crowdin-export.yml",
       }),
       storage: new SchedulerStorage(this.ctx.storage),
@@ -82,15 +82,11 @@ export default {
   },
   async scheduled(controller, env, context): Promise<void> {
     context.waitUntil(
-      armScheduler(env.CROWDIN_SCHEDULER.getByName(SCHEDULER_NAME), controller.scheduledTime),
+      armScheduler({
+        credentialsReady: Boolean(env.GITHUB_DISPATCH_TOKEN),
+        scheduler: env.CROWDIN_SCHEDULER.getByName(SCHEDULER_NAME),
+        scheduledTime: controller.scheduledTime,
+      }),
     );
   },
 } satisfies ExportedHandler<Env>;
-
-function parseGitHubToken(input: string): string {
-  if (input.length === 0) {
-    throw new Error("GITHUB_DISPATCH_TOKEN is missing");
-  }
-
-  return input;
-}

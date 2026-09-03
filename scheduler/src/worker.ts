@@ -8,10 +8,19 @@ type SchedulerWatchdog = {
   ensureArmed: (now: number) => Promise<void>;
 };
 
-export async function armScheduler(
-  scheduler: SchedulerWatchdog,
-  scheduledTime: number,
-): Promise<void> {
+export async function armScheduler({
+  credentialsReady,
+  scheduler,
+  scheduledTime,
+}: {
+  credentialsReady: boolean;
+  scheduler: SchedulerWatchdog;
+  scheduledTime: number;
+}): Promise<void> {
+  if (!credentialsReady) {
+    return;
+  }
+
   await scheduler.ensureArmed(scheduledTime);
 }
 

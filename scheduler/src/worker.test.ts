@@ -22,8 +22,16 @@ describe("scheduler Worker", () => {
     const scheduledTime = Date.parse("2026-09-04T00:15:00Z");
     const scheduler = { ensureArmed: vi.fn().mockResolvedValue(undefined) };
 
-    await armScheduler(scheduler, scheduledTime);
+    await armScheduler({ credentialsReady: true, scheduler, scheduledTime });
 
     expect(scheduler.ensureArmed).toHaveBeenCalledWith(scheduledTime);
+  });
+
+  test("the watchdog leaves the scheduler unarmed without credentials", async () => {
+    const scheduler = { ensureArmed: vi.fn() };
+
+    await armScheduler({ credentialsReady: false, scheduler, scheduledTime: Date.now() });
+
+    expect(scheduler.ensureArmed).not.toHaveBeenCalled();
   });
 });
