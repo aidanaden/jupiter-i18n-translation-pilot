@@ -67,6 +67,7 @@ describe("GitHub workflow client", () => {
   });
 
   test("rejects an empty dispatch response so the scheduler can adopt the run", async () => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     const client = new GitHubWorkflowClient({
       fetch,
@@ -82,7 +83,17 @@ describe("GitHub workflow client", () => {
         dispatchId: "crowdin-export-1788481020000-attempt-1",
         scheduledFor: "2026-09-04T00:17:00.000Z",
       }),
-    ).rejects.toThrow("GitHub workflow dispatch response is invalid");
+    ).rejects.toThrow("GitHub workflow dispatch failed");
+    expect(warning).toHaveBeenCalledWith(
+      JSON.stringify({
+        event: "github_workflow_request_failed",
+        operation: "dispatch",
+        reason: "invalid-json",
+        status: undefined,
+      }),
+    );
+    expect(warning.mock.calls.join(" ")).not.toContain("test-token");
+    warning.mockRestore();
   });
 
   test("finds an accepted dispatch by its exact run title", async () => {
