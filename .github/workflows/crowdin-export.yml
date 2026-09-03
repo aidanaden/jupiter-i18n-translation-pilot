@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
       - name: Verify the live Crowdin branch
         env:
           CROWDIN_BRANCH_ID: ${{ vars.CROWDIN_BRANCH_ID }}

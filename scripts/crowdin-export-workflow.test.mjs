@@ -20,6 +20,15 @@ describe("Crowdin export workflow", () => {
     expect(workflow.jobs.export.permissions).toBeUndefined();
     expect(workflow.jobs.export.steps).toEqual([
       { uses: "actions/checkout@v4" },
+      { uses: "pnpm/action-setup@v4" },
+      {
+        uses: "actions/setup-node@v4",
+        with: {
+          cache: "pnpm",
+          "node-version": 22,
+        },
+      },
+      { run: "pnpm install --frozen-lockfile" },
       {
         env: {
           CROWDIN_BRANCH_ID: "${{ vars.CROWDIN_BRANCH_ID }}",
