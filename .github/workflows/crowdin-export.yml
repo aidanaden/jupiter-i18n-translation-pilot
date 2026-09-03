@@ -1,9 +1,23 @@
 name: Export approved Crowdin translations
+run-name: Crowdin export [${{ github.event_name == 'schedule' && 'github-schedule' || inputs.dispatch_id || 'manual' }}]
 
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      dispatch_id:
+        description: Stable ID supplied by the external scheduler
+        required: false
+        type: string
+      scheduled_for:
+        description: Intended UTC export time supplied by the external scheduler
+        required: false
+        type: string
+
+concurrency:
+  group: crowdin-export
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -12,6 +26,7 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
