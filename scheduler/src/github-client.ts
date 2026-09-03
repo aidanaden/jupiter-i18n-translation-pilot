@@ -155,7 +155,7 @@ export class GitHubWorkflowClient {
     return {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${this.#token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
+      "X-GitHub-Api-Version": "2026-03-10",
       ...additional,
     };
   }

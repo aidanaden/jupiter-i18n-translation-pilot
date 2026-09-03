@@ -59,7 +59,7 @@ describe("GitHub workflow client", () => {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
           "Content-Type": "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
+          "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "POST",
       },
@@ -123,7 +123,7 @@ describe("GitHub workflow client", () => {
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
-          "X-GitHub-Api-Version": "2022-11-28",
+          "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "GET",
       },
@@ -157,7 +157,7 @@ describe("GitHub workflow client", () => {
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
-          "X-GitHub-Api-Version": "2022-11-28",
+          "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "GET",
       },
