@@ -59,6 +59,7 @@ describe("GitHub workflow client", () => {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
           "Content-Type": "application/json",
+          "User-Agent": "jupiter-i18n-translation-pilot-scheduler",
           "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "POST",
@@ -219,6 +220,7 @@ describe("GitHub workflow client", () => {
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
+          "User-Agent": "jupiter-i18n-translation-pilot-scheduler",
           "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "GET",
@@ -232,6 +234,25 @@ describe("GitHub workflow client", () => {
         throw new TypeError("Illegal invocation");
       }
 
+      return Promise.resolve(Response.json({ workflow_runs: [] }));
+    });
+    const client = new GitHubWorkflowClient({
+      fetch,
+      owner: "aidanaden",
+      ref: "main",
+      repository: "jupiter-i18n-translation-pilot",
+      token: "test-token",
+      workflow: "crowdin-export.yml",
+    });
+
+    await expect(client.findRun("dispatch-id")).resolves.toBeNull();
+  });
+
+  test("identifies the scheduler to GitHub", async () => {
+    const fetch = vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+      expect(new Headers(init?.headers).get("User-Agent")).toBe(
+        "jupiter-i18n-translation-pilot-scheduler",
+      );
       return Promise.resolve(Response.json({ workflow_runs: [] }));
     });
     const client = new GitHubWorkflowClient({
@@ -273,6 +294,7 @@ describe("GitHub workflow client", () => {
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: "Bearer test-token",
+          "User-Agent": "jupiter-i18n-translation-pilot-scheduler",
           "X-GitHub-Api-Version": "2026-03-10",
         },
         method: "GET",

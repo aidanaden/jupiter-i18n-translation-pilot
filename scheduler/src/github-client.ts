@@ -172,6 +172,7 @@ export class GitHubWorkflowClient {
     return {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${this.#token}`,
+      "User-Agent": "jupiter-i18n-translation-pilot-scheduler",
       "X-GitHub-Api-Version": "2026-03-10",
       ...additional,
     };
