@@ -3,6 +3,23 @@ import { describe, expect, test, vi } from "vitest";
 import { GitHubWorkflowClient } from "./github-client";
 
 describe("GitHub workflow client", () => {
+  test("does not require the dispatch token until a GitHub request starts", async () => {
+    const fetch = vi.fn();
+    const client = new GitHubWorkflowClient({
+      fetch,
+      owner: "aidanaden",
+      ref: "main",
+      repository: "jupiter-i18n-translation-pilot",
+      token: undefined,
+      workflow: "crowdin-export.yml",
+    });
+
+    await expect(client.findRun("crowdin-export-1788481020000-attempt-1")).rejects.toThrow(
+      "GITHUB_DISPATCH_TOKEN is missing",
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   test("dispatches the Crowdin workflow with a stable scheduler ID", async () => {
     const fetch = vi.fn().mockResolvedValue(
       Response.json({

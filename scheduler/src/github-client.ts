@@ -24,7 +24,7 @@ type GitHubWorkflowClientOptions = {
   owner: string;
   ref: string;
   repository: string;
-  token: string;
+  token: string | undefined;
   workflow: string;
 };
 
@@ -43,7 +43,7 @@ export class GitHubWorkflowClient {
   readonly #owner: string;
   readonly #ref: string;
   readonly #repository: string;
-  readonly #token: string;
+  readonly #token: string | undefined;
   readonly #workflow: string;
 
   constructor(options: GitHubWorkflowClientOptions) {
@@ -148,6 +148,10 @@ export class GitHubWorkflowClient {
   }
 
   #headers(additional: Record<string, string> = {}) {
+    if (!this.#token) {
+      throw new Error("GITHUB_DISPATCH_TOKEN is missing");
+    }
+
     return {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${this.#token}`,
