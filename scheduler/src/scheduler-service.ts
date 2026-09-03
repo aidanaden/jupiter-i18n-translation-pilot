@@ -10,6 +10,7 @@ type LastMiss = SchedulerRecord["lastMiss"];
 type DispatchPendingState = Extract<SchedulerRecord["state"], { kind: "dispatch-pending" }>;
 type TrackingState = Extract<SchedulerRecord["state"], { kind: "tracking" }>;
 type SloMissedState = Extract<SchedulerRecord["state"], { kind: "slo-missed" }>;
+type RunSchedule = DispatchPendingState["schedule"];
 
 type SchedulerStorage = {
   read: () => Promise<SchedulerRecord | null>;
@@ -33,13 +34,17 @@ type GitHubRunStatus =
   | { kind: "pending" }
   | { kind: "succeeded"; completedAt: number };
 
+type RetryScheduledOutcome = { kind: "retry-scheduled"; retryAt: number };
+type SloMissedOutcome = { dueAt: number; kind: "slo-missed"; missedAt: number };
+type DispatchOutcome = RetryScheduledOutcome | SloMissedOutcome | { kind: "tracking" };
+
 export type AlarmOutcome =
+  | DispatchOutcome
   | { kind: "armed" }
   | { completedAt: number; kind: "completed"; runId: number }
-  | { kind: "retry-scheduled"; retryAt: number }
-  | { dueAt: number; kind: "slo-missed"; missedAt: number }
-  | { kind: "tracking" }
   | { kind: "waiting" };
+
+export type CanaryOutcome = DispatchOutcome | { kind: "busy" };
 
 type LastSuccessHealth = null | {
   completedAt: string;
@@ -181,6 +186,25 @@ export class SchedulerService {
     }
   }
 
+  async triggerCanary(now: number): Promise<CanaryOutcome> {
+    const record = await this.#storage.read();
+    if (record?.state.kind === "dispatch-pending" || record?.state.kind === "tracking") {
+      return { kind: "busy" };
+    }
+
+    const prior: Pick<SchedulerRecord, "lastMiss" | "lastSuccess"> = record ?? {
+      lastMiss: { kind: "none" },
+      lastSuccess: { kind: "none" },
+    };
+    const resumeAt = record?.state.nextDueAt ?? nextHourlySlot(now);
+    return this.#startSlot({
+      dueAt: now,
+      now,
+      prior,
+      schedule: { kind: "canary", resumeAt },
+    });
+  }
+
   async handleAlarm(now: number): Promise<AlarmOutcome> {
     const record = await this.#storage.read();
     if (!record) {
@@ -194,7 +218,12 @@ export class SchedulerService {
         return { kind: "waiting" };
       }
 
-      return this.#startSlot(record, record.state.nextDueAt, now);
+      return this.#startSlot({
+        dueAt: record.state.nextDueAt,
+        now,
+        prior: record,
+        schedule: { kind: "hourly" },
+      });
     }
 
     if (record.state.kind === "dispatch-pending") {
@@ -215,7 +244,12 @@ export class SchedulerService {
         return { kind: "waiting" };
       }
 
-      return this.#startSlot(record, record.state.nextDueAt, now);
+      return this.#startSlot({
+        dueAt: record.state.nextDueAt,
+        now,
+        prior: record,
+        schedule: { kind: "hourly" },
+      });
     }
 
     return this.#pollRun(
@@ -224,11 +258,17 @@ export class SchedulerService {
     );
   }
 
-  async #startSlot(
-    prior: Pick<SchedulerRecord, "lastMiss" | "lastSuccess">,
-    dueAt: number,
-    now: number,
-  ): Promise<AlarmOutcome> {
+  async #startSlot({
+    dueAt,
+    now,
+    prior,
+    schedule,
+  }: {
+    dueAt: number;
+    now: number;
+    prior: Pick<SchedulerRecord, "lastMiss" | "lastSuccess">;
+    schedule: RunSchedule;
+  }): Promise<DispatchOutcome> {
     const attempt = 1;
     const pending: DispatchPendingState = {
       attempt,
@@ -237,6 +277,7 @@ export class SchedulerService {
       dueAt,
       kind: "dispatch-pending",
       nextAttemptAt: now,
+      schedule,
     };
     const record = { ...prior, state: pending };
     await this.#storage.write(record);
@@ -246,7 +287,7 @@ export class SchedulerService {
   async #startOrFindRun(
     record: SchedulerRecord & { state: DispatchPendingState },
     now: number,
-  ): Promise<AlarmOutcome> {
+  ): Promise<DispatchOutcome> {
     if (now >= record.state.deadlineAt) {
       return this.#markSloMissed(record, now, {
         attempt: record.state.attempt,
@@ -286,6 +327,7 @@ export class SchedulerService {
         nextPollAt,
         runId: run.id,
         runUrl: run.url,
+        schedule: record.state.schedule,
       },
     });
     await this.#storage.setAlarm(nextPollAt);
@@ -319,7 +361,7 @@ export class SchedulerService {
     }
 
     if (status.kind === "succeeded" && status.completedAt <= record.state.deadlineAt) {
-      const nextDueAt = nextHourlySlot(status.completedAt);
+      const nextDueAt = nextDueAtAfterRun(record.state.schedule, status.completedAt);
       await this.#storage.write({
         lastMiss: record.lastMiss,
         lastSuccess: {
@@ -356,6 +398,7 @@ export class SchedulerService {
           dueAt: record.state.dueAt,
           kind: "dispatch-pending",
           nextAttemptAt: retryAt,
+          schedule: record.state.schedule,
         },
       });
       await this.#storage.setAlarm(retryAt);
@@ -384,12 +427,15 @@ export class SchedulerService {
     record: SchedulerRecord,
     missedAt: number,
     evidence: SloMissedState["evidence"],
-  ): Promise<AlarmOutcome> {
+  ): Promise<SloMissedOutcome> {
     const dueAt =
       record.state.kind === "waiting" || record.state.kind === "slo-missed"
         ? record.state.nextDueAt
         : record.state.dueAt;
-    const nextDueAt = nextHourlySlot(missedAt);
+    const nextDueAt =
+      record.state.kind === "dispatch-pending" || record.state.kind === "tracking"
+        ? nextDueAtAfterRun(record.state.schedule, missedAt)
+        : nextHourlySlot(missedAt);
     await this.#storage.write({
       ...record,
       lastMiss: { dueAt, evidence, kind: "recorded", missedAt },
@@ -398,6 +444,10 @@ export class SchedulerService {
     await this.#storage.setAlarm(nextDueAt);
     return { dueAt, kind: "slo-missed", missedAt };
   }
+}
+
+function nextDueAtAfterRun(schedule: RunSchedule, fallbackTime: number): number {
+  return schedule.kind === "canary" ? schedule.resumeAt : nextHourlySlot(fallbackTime);
 }
 
 function lastSuccessHealth(lastSuccess: LastSuccess): LastSuccessHealth {

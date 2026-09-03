@@ -41,6 +41,8 @@ Before deployment, run `pnpm exec wrangler whoami`. Stop unless the signed-in id
 
 The `/health` endpoint reports `unarmed`, `waiting`, `dispatch-pending`, `tracking`, or `slo-missed` without returning credentials. It retains the latest missed SLO after the scheduler advances. A non-null `lastMiss` blocks the recording and reopens the scheduler decision.
 
+For pre-flight testing, `POST /canary` starts the same dispatch and tracking path immediately without changing the pending hourly due time. The route is disabled unless both `GITHUB_DISPATCH_TOKEN` and `CANARY_TRIGGER_TOKEN` exist, requires `Authorization: Bearer <CANARY_TRIGGER_TOKEN>`, and refuses to overlap an active run. Provision the canary token only for the test window. Require two successful fast canaries minutes apart, then one successful minute-17 hourly run. Delete the canary token before the live proof so the scheduler returns to its single GitHub credential.
+
 ## External proof gate
 
 Do not create or change Crowdin, Cloudflare, GitHub integration, secret, deployment, or tester resources without explicit authorization. The personal scheduler is for pre-flight and recording only. It does not satisfy the organization-ownership proof. The live proof must follow `apps/jupiter-ui/docs/I18N_TRANSLATION_PILOT_ARCHITECTURE.md`.

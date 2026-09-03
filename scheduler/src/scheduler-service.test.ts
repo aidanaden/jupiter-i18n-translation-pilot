@@ -40,6 +40,201 @@ describe("Crowdin export scheduler", () => {
     expect(github.dispatch).not.toHaveBeenCalled();
   });
 
+  test("a fast canary starts immediately and preserves the next hourly cadence", async () => {
+    const now = Date.parse("2026-09-04T00:10:00Z");
+    const resumeAt = Date.parse("2026-09-04T00:17:00Z");
+    const storage = {
+      read: vi.fn().mockResolvedValue({
+        lastMiss: { kind: "none" },
+        lastSuccess: { kind: "none" },
+        state: {
+          kind: "waiting",
+          nextDueAt: resumeAt,
+        },
+      }),
+      write: vi.fn().mockResolvedValue(undefined),
+      setAlarm: vi.fn().mockResolvedValue(undefined),
+    };
+    const github = {
+      dispatch: vi.fn().mockResolvedValue({ id: 42, url: "https://github.test/runs/42" }),
+      findRun: vi.fn().mockResolvedValue(null),
+      getRun: vi.fn(),
+    };
+    const scheduler = new SchedulerService({ github, storage });
+
+    await expect(scheduler.triggerCanary(now)).resolves.toEqual({ kind: "tracking" });
+
+    const dispatchId = `crowdin-export-${now}-attempt-1`;
+    expect(github.dispatch).toHaveBeenCalledWith({
+      dispatchId,
+      scheduledFor: "2026-09-04T00:10:00.000Z",
+    });
+    expect(storage.write).toHaveBeenLastCalledWith({
+      lastMiss: { kind: "none" },
+      lastSuccess: { kind: "none" },
+      state: {
+        attempt: 1,
+        deadlineAt: Date.parse("2026-09-04T01:40:00Z"),
+        dispatchId,
+        dueAt: now,
+        kind: "tracking",
+        nextPollAt: Date.parse("2026-09-04T00:10:30Z"),
+        runId: 42,
+        runUrl: "https://github.test/runs/42",
+        schedule: { kind: "canary", resumeAt },
+      },
+    });
+  });
+
+  test("a canary completed after minute 17 restores the pending hourly run", async () => {
+    const dueAt = Date.parse("2026-09-04T00:10:00Z");
+    const resumeAt = Date.parse("2026-09-04T00:17:00Z");
+    const completedAt = Date.parse("2026-09-04T00:18:00Z");
+    const storage = {
+      read: vi.fn().mockResolvedValue({
+        lastMiss: { kind: "none" },
+        lastSuccess: { kind: "none" },
+        state: {
+          attempt: 1,
+          deadlineAt: Date.parse("2026-09-04T01:40:00Z"),
+          dispatchId: `crowdin-export-${dueAt}-attempt-1`,
+          dueAt,
+          kind: "tracking",
+          nextPollAt: completedAt,
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+          schedule: { kind: "canary", resumeAt },
+        },
+      }),
+      write: vi.fn().mockResolvedValue(undefined),
+      setAlarm: vi.fn().mockResolvedValue(undefined),
+    };
+    const github = {
+      dispatch: vi.fn(),
+      findRun: vi.fn(),
+      getRun: vi.fn().mockResolvedValue({ completedAt, kind: "succeeded" }),
+    };
+    const scheduler = new SchedulerService({ github, storage });
+
+    await expect(scheduler.handleAlarm(completedAt)).resolves.toEqual({
+      completedAt,
+      kind: "completed",
+      runId: 42,
+    });
+
+    expect(storage.write).toHaveBeenCalledWith({
+      lastMiss: { kind: "none" },
+      lastSuccess: {
+        completedAt,
+        dueAt,
+        kind: "recorded",
+        runId: 42,
+        runUrl: "https://github.test/runs/42",
+      },
+      state: { kind: "waiting", nextDueAt: resumeAt },
+    });
+    expect(storage.setAlarm).toHaveBeenCalledWith(resumeAt);
+  });
+
+  test("a canary SLO miss restores the pending hourly run", async () => {
+    const dueAt = Date.parse("2026-09-04T00:10:00Z");
+    const resumeAt = Date.parse("2026-09-04T00:17:00Z");
+    const deadlineAt = Date.parse("2026-09-04T01:40:00Z");
+    const storage = {
+      read: vi.fn().mockResolvedValue({
+        lastMiss: { kind: "none" },
+        lastSuccess: { kind: "none" },
+        state: {
+          attempt: 1,
+          deadlineAt,
+          dispatchId: `crowdin-export-${dueAt}-attempt-1`,
+          dueAt,
+          kind: "tracking",
+          nextPollAt: deadlineAt,
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+          schedule: { kind: "canary", resumeAt },
+        },
+      }),
+      write: vi.fn().mockResolvedValue(undefined),
+      setAlarm: vi.fn().mockResolvedValue(undefined),
+    };
+    const github = {
+      dispatch: vi.fn(),
+      findRun: vi.fn(),
+      getRun: vi.fn().mockResolvedValue({ kind: "pending" }),
+    };
+    const scheduler = new SchedulerService({ github, storage });
+
+    await expect(scheduler.handleAlarm(deadlineAt)).resolves.toEqual({
+      dueAt,
+      kind: "slo-missed",
+      missedAt: deadlineAt,
+    });
+
+    expect(storage.write).toHaveBeenCalledWith({
+      lastMiss: {
+        dueAt,
+        evidence: {
+          attempt: 1,
+          kind: "run",
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+        },
+        kind: "recorded",
+        missedAt: deadlineAt,
+      },
+      lastSuccess: { kind: "none" },
+      state: {
+        dueAt,
+        evidence: {
+          attempt: 1,
+          kind: "run",
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+        },
+        kind: "slo-missed",
+        missedAt: deadlineAt,
+        nextDueAt: resumeAt,
+      },
+    });
+    expect(storage.setAlarm).toHaveBeenCalledWith(resumeAt);
+  });
+
+  test("a fast canary refuses to overlap an active run", async () => {
+    const now = Date.parse("2026-09-04T00:10:00Z");
+    const storage = {
+      read: vi.fn().mockResolvedValue({
+        lastMiss: { kind: "none" },
+        lastSuccess: { kind: "none" },
+        state: {
+          attempt: 1,
+          deadlineAt: Date.parse("2026-09-04T01:47:00Z"),
+          dispatchId: "crowdin-export-active-attempt-1",
+          dueAt: Date.parse("2026-09-04T00:17:00Z"),
+          kind: "tracking",
+          nextPollAt: now,
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
+        },
+      }),
+      write: vi.fn(),
+      setAlarm: vi.fn(),
+    };
+    const github = {
+      dispatch: vi.fn(),
+      findRun: vi.fn(),
+      getRun: vi.fn(),
+    };
+    const scheduler = new SchedulerService({ github, storage });
+
+    await expect(scheduler.triggerCanary(now)).resolves.toEqual({ kind: "busy" });
+
+    expect(storage.write).not.toHaveBeenCalled();
+    expect(github.dispatch).not.toHaveBeenCalled();
+  });
+
   test("a due alarm persists its dispatch ID before starting one GitHub run", async () => {
     const dueAt = Date.parse("2026-09-04T00:17:00Z");
     const storage = {
@@ -72,6 +267,7 @@ describe("Crowdin export scheduler", () => {
         dueAt,
         kind: "dispatch-pending",
         nextAttemptAt: dueAt,
+        schedule: { kind: "hourly" },
       },
     });
     expect(github.findRun).toHaveBeenCalledWith(dispatchId);
@@ -91,6 +287,7 @@ describe("Crowdin export scheduler", () => {
         nextPollAt: Date.parse("2026-09-04T00:17:30Z"),
         runId: 42,
         runUrl: "https://github.test/runs/42",
+        schedule: { kind: "hourly" },
       },
     });
     expect(storage.setAlarm).toHaveBeenCalledWith(Date.parse("2026-09-04T00:17:30Z"));
@@ -112,6 +309,7 @@ describe("Crowdin export scheduler", () => {
           dueAt,
           kind: "dispatch-pending",
           nextAttemptAt: now,
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
@@ -140,6 +338,7 @@ describe("Crowdin export scheduler", () => {
         nextPollAt: Date.parse("2026-09-04T00:22:30Z"),
         runId: 42,
         runUrl: "https://github.test/runs/42",
+        schedule: { kind: "hourly" },
       },
     });
   });
@@ -155,6 +354,7 @@ describe("Crowdin export scheduler", () => {
       dueAt,
       kind: "dispatch-pending",
       nextAttemptAt: now,
+      schedule: { kind: "hourly" },
     };
     const storage = {
       read: vi.fn().mockResolvedValue({
@@ -201,6 +401,7 @@ describe("Crowdin export scheduler", () => {
       nextPollAt: Date.parse("2026-09-04T00:17:30Z"),
       runId: 42,
       runUrl: "https://github.test/runs/42",
+      schedule: { kind: "hourly" },
     };
     const storage = {
       read: vi.fn().mockResolvedValue({
@@ -259,6 +460,7 @@ describe("Crowdin export scheduler", () => {
           nextPollAt: failedAt,
           runId: 42,
           runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
@@ -290,6 +492,7 @@ describe("Crowdin export scheduler", () => {
         dueAt,
         kind: "dispatch-pending",
         nextAttemptAt: Date.parse("2026-09-04T00:25:00Z"),
+        schedule: { kind: "hourly" },
       },
     });
   });
@@ -310,6 +513,7 @@ describe("Crowdin export scheduler", () => {
           nextPollAt: deadlineAt,
           runId: 42,
           runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
@@ -378,6 +582,7 @@ describe("Crowdin export scheduler", () => {
           nextPollAt: Date.parse("2026-09-04T00:18:30Z"),
           runId: 42,
           runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn(),
@@ -521,6 +726,7 @@ describe("Crowdin export scheduler", () => {
           nextPollAt: completedAt,
           runId: 42,
           runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
@@ -584,6 +790,7 @@ describe("Crowdin export scheduler", () => {
           dueAt,
           kind: "dispatch-pending",
           nextAttemptAt: now,
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
@@ -621,6 +828,7 @@ describe("Crowdin export scheduler", () => {
           nextPollAt: deadlineAt,
           runId: 42,
           runUrl: "https://github.test/runs/42",
+          schedule: { kind: "hourly" },
         },
       }),
       write: vi.fn().mockResolvedValue(undefined),
