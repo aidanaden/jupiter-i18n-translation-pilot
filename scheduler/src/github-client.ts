@@ -179,7 +179,7 @@ export class GitHubWorkflowClient {
 
   async #request(operation: GitHubOperation, url: string, init: RequestInit): Promise<Response> {
     try {
-      return await this.#fetch(url, init);
+      return await this.#fetch.call(globalThis, url, init);
     } catch {
       throw requestFailure(operation, "network");
     }
