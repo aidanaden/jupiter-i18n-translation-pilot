@@ -6,13 +6,14 @@ import {
   schedulerRecordSchema,
   type SchedulerRecord,
 } from "./scheduler-record";
-import { SchedulerService, type SchedulerHealth } from "./scheduler-service";
+import { SchedulerService, type CanaryOutcome, type SchedulerHealth } from "./scheduler-service";
 import { armScheduler, handleSchedulerRequest } from "./worker";
 
 const RECORD_KEY = "scheduler-record";
 const SCHEDULER_NAME = "crowdin-export";
 
 type Env = Omit<SchedulerEnv, "CROWDIN_SCHEDULER"> & {
+  CANARY_TRIGGER_TOKEN: string | undefined;
   CROWDIN_SCHEDULER: DurableObjectNamespace<CrowdinExportScheduler>;
   GITHUB_DISPATCH_TOKEN: string | undefined;
 };
@@ -61,6 +62,10 @@ export class CrowdinExportScheduler extends DurableObject<Env> {
     return this.#service().getHealth();
   }
 
+  async triggerCanary(now: number): Promise<CanaryOutcome> {
+    return this.#service().triggerCanary(now);
+  }
+
   #service(): SchedulerService {
     return new SchedulerService({
       github: new GitHubWorkflowClient({
@@ -78,7 +83,13 @@ export class CrowdinExportScheduler extends DurableObject<Env> {
 
 export default {
   async fetch(request, env): Promise<Response> {
-    return handleSchedulerRequest(request, env.CROWDIN_SCHEDULER.getByName(SCHEDULER_NAME));
+    return handleSchedulerRequest({
+      canaryToken: env.CANARY_TRIGGER_TOKEN,
+      credentialsReady: Boolean(env.GITHUB_DISPATCH_TOKEN),
+      now: Date.now,
+      request,
+      scheduler: env.CROWDIN_SCHEDULER.getByName(SCHEDULER_NAME),
+    });
   },
   async scheduled(controller, env, context): Promise<void> {
     context.waitUntil(

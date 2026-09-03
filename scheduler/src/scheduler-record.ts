@@ -40,6 +40,11 @@ const lastMissSchema = z.union([
   }),
 ]);
 
+const runScheduleSchema = z.union([
+  z.object({ kind: z.literal("hourly") }),
+  z.object({ kind: z.literal("canary"), resumeAt: timestampSchema }),
+]);
+
 const schedulerStateSchema = z.union([
   z.object({
     kind: z.literal("waiting"),
@@ -52,6 +57,7 @@ const schedulerStateSchema = z.union([
     dueAt: timestampSchema,
     kind: z.literal("dispatch-pending"),
     nextAttemptAt: timestampSchema,
+    schedule: z.optional(runScheduleSchema),
   }),
   z.object({
     attempt: positiveIntegerSchema,
@@ -62,6 +68,7 @@ const schedulerStateSchema = z.union([
     nextPollAt: timestampSchema,
     runId: positiveIntegerSchema,
     runUrl: runUrlSchema,
+    schedule: z.optional(runScheduleSchema),
   }),
   z.object({
     dueAt: timestampSchema,
@@ -78,7 +85,24 @@ export const schedulerRecordSchema = z.object({
   state: schedulerStateSchema,
 });
 
-export type SchedulerRecord = z.infer<typeof schedulerRecordSchema>;
+type StoredSchedulerRecord = z.infer<typeof schedulerRecordSchema>;
+type StoredSchedulerState = StoredSchedulerRecord["state"];
+type RunSchedule = z.infer<typeof runScheduleSchema>;
+type ActiveSchedulerState =
+  | (Omit<Extract<StoredSchedulerState, { kind: "dispatch-pending" }>, "schedule"> & {
+      schedule: RunSchedule;
+    })
+  | (Omit<Extract<StoredSchedulerState, { kind: "tracking" }>, "schedule"> & {
+      schedule: RunSchedule;
+    });
+type IdleSchedulerState = Exclude<
+  StoredSchedulerState,
+  { kind: "dispatch-pending" } | { kind: "tracking" }
+>;
+
+export type SchedulerRecord = Omit<StoredSchedulerRecord, "state"> & {
+  state: ActiveSchedulerState | IdleSchedulerState;
+};
 type SchedulerRecordParseResult = ReturnType<typeof schedulerRecordSchema.safeParse>;
 
 export function parseSchedulerRecord(result: SchedulerRecordParseResult): SchedulerRecord {
@@ -86,5 +110,21 @@ export function parseSchedulerRecord(result: SchedulerRecordParseResult): Schedu
     throw new Error("Stored scheduler state is invalid");
   }
 
-  return result.data;
+  const { lastMiss, lastSuccess, state } = result.data;
+  switch (state.kind) {
+    case "dispatch-pending":
+    case "tracking":
+      return {
+        lastMiss,
+        lastSuccess,
+        state: { ...state, schedule: state.schedule ?? { kind: "hourly" } },
+      };
+    case "slo-missed":
+    case "waiting":
+      return { lastMiss, lastSuccess, state };
+    default: {
+      const exhaustive: never = state;
+      return exhaustive;
+    }
+  }
 }

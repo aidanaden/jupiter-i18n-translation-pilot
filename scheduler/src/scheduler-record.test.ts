@@ -25,4 +25,29 @@ describe("scheduler record boundary", () => {
       expect(String(error)).not.toContain("must-not-leak");
     }
   });
+
+  test("normalizes a stored active run from before schedule sources were recorded", () => {
+    const dueAt = Date.parse("2026-09-04T00:17:00Z");
+    const record = parseSchedulerRecord(
+      schedulerRecordSchema.safeParse({
+        lastMiss: { kind: "none" },
+        lastSuccess: { kind: "none" },
+        state: {
+          attempt: 1,
+          deadlineAt: Date.parse("2026-09-04T01:47:00Z"),
+          dispatchId: `crowdin-export-${dueAt}-attempt-1`,
+          dueAt,
+          kind: "tracking",
+          nextPollAt: Date.parse("2026-09-04T00:17:30Z"),
+          runId: 42,
+          runUrl: "https://github.test/runs/42",
+        },
+      }),
+    );
+
+    expect(record.state).toMatchObject({
+      kind: "tracking",
+      schedule: { kind: "hourly" },
+    });
+  });
 });
