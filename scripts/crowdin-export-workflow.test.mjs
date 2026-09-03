@@ -11,13 +11,34 @@ describe("Crowdin export workflow", () => {
 
     expect(workflow.on).toEqual({
       schedule: [{ cron: "17 * * * *" }],
-      workflow_dispatch: null,
+      workflow_dispatch: {
+        inputs: {
+          dispatch_id: {
+            description: "Stable ID supplied by the external scheduler",
+            required: false,
+            type: "string",
+          },
+          scheduled_for: {
+            description: "Intended UTC export time supplied by the external scheduler",
+            required: false,
+            type: "string",
+          },
+        },
+      },
+    });
+    expect(workflow["run-name"]).toBe(
+      "Crowdin export [${{ github.event_name == 'schedule' && 'github-schedule' || inputs.dispatch_id || 'manual' }}]",
+    );
+    expect(workflow.concurrency).toEqual({
+      "cancel-in-progress": false,
+      group: "crowdin-export",
     });
     expect(workflow.permissions).toEqual({
       contents: "write",
       "pull-requests": "write",
     });
     expect(workflow.jobs.export.permissions).toBeUndefined();
+    expect(workflow.jobs.export["timeout-minutes"]).toBe(30);
     expect(workflow.jobs.export.steps).toEqual([
       { uses: "actions/checkout@v4" },
       { uses: "pnpm/action-setup@v4" },

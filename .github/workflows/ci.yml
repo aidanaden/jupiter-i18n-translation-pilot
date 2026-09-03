@@ -22,6 +22,7 @@ jobs:
           cache: pnpm
           node-version: 22
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run scheduler:cf-typegen
       - run: pnpm run format:check
       - run: pnpm run lint:check
       - run: pnpm run typecheck
@@ -36,3 +37,4 @@ jobs:
       - run: pnpm run verify:rehearsal-reset-execution
       - run: pnpm run verify:rehearsal-translated
       - run: pnpm run deploy:dry-run
+      - run: pnpm run scheduler:deploy:dry-run
