@@ -226,6 +226,26 @@ describe("GitHub workflow client", () => {
     );
   });
 
+  test("calls an injected fetch with the global receiver required by Cloudflare", async () => {
+    const fetch = vi.fn(function (this: unknown) {
+      if (this !== globalThis) {
+        throw new TypeError("Illegal invocation");
+      }
+
+      return Promise.resolve(Response.json({ workflow_runs: [] }));
+    });
+    const client = new GitHubWorkflowClient({
+      fetch,
+      owner: "aidanaden",
+      ref: "main",
+      repository: "jupiter-i18n-translation-pilot",
+      token: "test-token",
+      workflow: "crowdin-export.yml",
+    });
+
+    await expect(client.findRun("dispatch-id")).resolves.toBeNull();
+  });
+
   test("maps a completed GitHub run to the scheduler result", async () => {
     const fetch = vi.fn().mockResolvedValue(
       Response.json({
