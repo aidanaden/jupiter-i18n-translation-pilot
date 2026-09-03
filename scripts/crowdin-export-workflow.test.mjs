@@ -10,7 +10,6 @@ describe("Crowdin export workflow", () => {
     const workflow = parse(await readFile(WORKFLOW_PATH, "utf8"));
 
     expect(workflow.on).toEqual({
-      schedule: [{ cron: "17 * * * *" }],
       workflow_dispatch: {
         inputs: {
           dispatch_id: {
@@ -26,9 +25,7 @@ describe("Crowdin export workflow", () => {
         },
       },
     });
-    expect(workflow["run-name"]).toBe(
-      "Crowdin export [${{ github.event_name == 'schedule' && 'github-schedule' || inputs.dispatch_id || 'manual' }}]",
-    );
+    expect(workflow["run-name"]).toBe("Crowdin export [${{ inputs.dispatch_id || 'manual' }}]");
     expect(workflow.concurrency).toEqual({
       "cancel-in-progress": false,
       group: "crowdin-export",
