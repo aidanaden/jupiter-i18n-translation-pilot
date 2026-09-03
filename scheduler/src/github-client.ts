@@ -38,6 +38,8 @@ type GitHubRunReference = {
   url: string;
 };
 
+type GitHubOperation = "dispatch" | "find-run" | "get-run";
+
 export class GitHubWorkflowClient {
   readonly #fetch: typeof globalThis.fetch;
   readonly #owner: string;
@@ -56,7 +58,7 @@ export class GitHubWorkflowClient {
   }
 
   async dispatch(input: DispatchInput): Promise<GitHubRunReference> {
-    const response = await this.#fetch(this.#workflowUrl("dispatches"), {
+    const response = await this.#request("dispatch", this.#workflowUrl("dispatches"), {
       body: JSON.stringify({
         inputs: {
           dispatch_id: input.dispatchId,
@@ -69,19 +71,19 @@ export class GitHubWorkflowClient {
       method: "POST",
     });
     if (!response.ok) {
-      throw new Error(`GitHub workflow dispatch failed with HTTP ${response.status}`);
+      throw requestFailure("dispatch", "http", response.status);
     }
 
     let body: unknown;
     try {
       body = JSON.parse(await response.text());
     } catch {
-      throw new Error("GitHub workflow dispatch response is invalid");
+      throw requestFailure("dispatch", "invalid-json");
     }
 
     const result = dispatchResponseSchema.safeParse(body);
     if (!result.success) {
-      throw new Error("GitHub workflow dispatch response is invalid");
+      throw requestFailure("dispatch", "invalid-body");
     }
 
     return { id: result.data.workflow_run_id, url: result.data.html_url };
@@ -93,17 +95,24 @@ export class GitHubWorkflowClient {
       event: "workflow_dispatch",
       per_page: "30",
     });
-    const response = await this.#fetch(`${this.#workflowUrl("runs")}?${search}`, {
+    const response = await this.#request("find-run", `${this.#workflowUrl("runs")}?${search}`, {
       headers: this.#headers(),
       method: "GET",
     });
     if (!response.ok) {
-      throw new Error(`GitHub workflow run lookup failed with HTTP ${response.status}`);
+      throw requestFailure("find-run", "http", response.status);
     }
 
-    const result = workflowRunsResponseSchema.safeParse(await response.json());
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      throw requestFailure("find-run", "invalid-json");
+    }
+
+    const result = workflowRunsResponseSchema.safeParse(body);
     if (!result.success) {
-      throw new Error("GitHub workflow run list response is invalid");
+      throw requestFailure("find-run", "invalid-body");
     }
 
     const title = `Crowdin export [${dispatchId}]`;
@@ -118,17 +127,25 @@ export class GitHubWorkflowClient {
     | { kind: "pending" }
     | { kind: "succeeded"; completedAt: number }
   > {
-    const response = await this.#fetch(
+    const response = await this.#request(
+      "get-run",
       `https://api.github.com/repos/${this.#owner}/${this.#repository}/actions/runs/${runId}`,
       { headers: this.#headers(), method: "GET" },
     );
     if (!response.ok) {
-      throw new Error(`GitHub workflow run lookup failed with HTTP ${response.status}`);
+      throw requestFailure("get-run", "http", response.status);
     }
 
-    const result = workflowRunResponseSchema.safeParse(await response.json());
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      throw requestFailure("get-run", "invalid-json");
+    }
+
+    const result = workflowRunResponseSchema.safeParse(body);
     if (!result.success) {
-      throw new Error("GitHub workflow run response is invalid");
+      throw requestFailure("get-run", "invalid-body");
     }
 
     if (result.data.status !== "completed") {
@@ -160,7 +177,26 @@ export class GitHubWorkflowClient {
     };
   }
 
+  async #request(operation: GitHubOperation, url: string, init: RequestInit): Promise<Response> {
+    try {
+      return await this.#fetch(url, init);
+    } catch {
+      throw requestFailure(operation, "network");
+    }
+  }
+
   #workflowUrl(suffix: string): string {
     return `https://api.github.com/repos/${this.#owner}/${this.#repository}/actions/workflows/${this.#workflow}/${suffix}`;
   }
+}
+
+function requestFailure(
+  operation: GitHubOperation,
+  reason: "http" | "invalid-body" | "invalid-json" | "network",
+  status?: number,
+): Error {
+  console.warn(
+    JSON.stringify({ event: "github_workflow_request_failed", operation, reason, status }),
+  );
+  return new Error(`GitHub workflow ${operation} failed`);
 }
