@@ -13,7 +13,13 @@ const baseline = fileURLToPath(
 );
 const head = "ed5dc31e70930c8bdb7d3675d208dd99395647d2";
 const run = (...args) =>
-  JSON.parse(execFileSync(process.execPath, [cli, ...args], { encoding: "utf8" }));
+  JSON.parse(
+    execFileSync(process.execPath, [cli, ...args], {
+      encoding: "utf8",
+      timeout: 10_000,
+      killSignal: "SIGKILL",
+    }),
+  );
 
 it("prepares and stages only new private scratch artifacts, retaining the exact raw bytes", async () => {
   const outputs = [];
@@ -51,9 +57,9 @@ it("prepares and stages only new private scratch artifacts, retaining the exact 
   } finally {
     await Promise.all(outputs.map((directory) => rm(directory, { recursive: true })));
   }
-});
+}, 30_000);
 
 it("rejects an output path or unexpected CLI arguments", () => {
   expect(() => run("prepare", source, baseline, head, source)).toThrow();
   expect(() => run("unknown")).toThrow();
-});
+}, 30_000);

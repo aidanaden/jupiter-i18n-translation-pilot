@@ -21,3 +21,9 @@ The first reset tests read the baseline target from the current app file. That i
 A separate detached worktree at the test-fix commit was used for verification. All 13 Chinese target entries were replaced with a valid synthetic candidate derived from the source. Each entry has a test prefix; the proof is nonempty. This was not a provider request or human-reviewed translation. Its target SHA-256 is `bde569e8f3affcb461954894a8b46e29546f2cc2f2a48e7953075fff3d0f19df`. Only that target file differs in the detached worktree. Formatting, lint, type check, and the full serial 343-test suite passed against this candidate checkout. The original worktree catalogs remain unchanged.
 
 The normal CI test command, `pnpm run test`, also passed all 343 tests in the candidate checkout without a worker-count override. The detached checkout remains local for inspection at `/Users/aidan/Developer/jupiter-i18n-lingo-candidate-suite`; its candidate PO is test data only and is not part of the commit.
+
+## Real CLI test time limit
+
+The integration run at `1778226` passed 342 tests but timed out in the first app catalog CLI test: 6100 ms against the default 5000 ms limit. This test starts three separate Node processes that load Lingui, then checks real private files. The second test starts two processes to check rejected arguments. These tests do not check a five-second product requirement. Each test now has an explicit 30-second limit, and each `execFileSync` child has a 10-second timeout. Assertions are unchanged. No global test timeout or app behavior changed.
+
+The child timeout uses `SIGKILL` so a stalled child cannot ignore the termination signal. Formatting, lint, and type checks passed. The normal `pnpm run test` command passed all 343 tests with the final timeout settings. Candidate test data and functional assertions did not change, so the earlier full candidate-checkout pass remains applicable.
