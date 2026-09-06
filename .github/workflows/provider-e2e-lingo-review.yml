@@ -1,0 +1,77 @@
+name: Lingo saved-draft human review test
+
+on:
+  push:
+    branches:
+      - aidan/provider-e2e-lingo-01
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  prepare:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/provider-e2e-lingo-01'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      digest: ${{ steps.packet.outputs.digest }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - id: packet
+        run: node scripts/provider-e2e/github-review-test.mjs prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.packet.outputs.artifact-name }}
+          path: review-packet/
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: false
+
+  review:
+    needs: prepare
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/provider-e2e-lingo-01' && github.run_attempt == 1
+    environment: provider-e2e-lingo-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.artifact-id }}
+          path: review-packet/
+          merge-multiple: true
+      - run: node scripts/provider-e2e/github-review-test.mjs verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_REVIEW_DIGEST: ${{ needs.prepare.outputs.digest }}
+          REVIEW_ARTIFACT_ID: ${{ needs.prepare.outputs.artifact-id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingo-review-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: review-receipt.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: false

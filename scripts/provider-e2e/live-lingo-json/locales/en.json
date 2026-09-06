@@ -1,0 +1,16 @@
+{
+  "swap.submit": "Swap",
+  "swap.slippage": "Slippage tolerance",
+  "swap.warning": "Your transaction may fail if the price changes.",
+  "swap.fee": "Network fee: {fee} SOL",
+  "wallet.balance": "Balance",
+  "wallet.connected": "Connected to {wallet}",
+  "swap.routes": "{count, plural, one {# route available} other {# routes available}}",
+  "swap.status": "{status, select, pending {Transaction pending} failed {Transaction failed} other {Transaction complete}}",
+  "swap.details": "Read <link>transaction details</link> before you confirm.",
+  "swap.irreversible": "<strong>Transfers cannot be reversed.</strong> Check the address.",
+  "swap.product": "Swap SOL for USDC on Jupiter",
+  "swap.confirm": "Select \"Confirm\" to continue.",
+  "swap.receive": "You receive {amount} {token}",
+  "swap.minimum": "The minimum amount received may differ from this estimate."
+}

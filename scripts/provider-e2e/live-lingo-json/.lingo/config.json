@@ -1,0 +1,7 @@
+{
+  "orgId": "org_yOdeUVJptYpiIIcjKexh",
+  "engineId": "eng_s8sAdrF2lrMnWj94r7kd",
+  "sourceLocale": "en",
+  "targetLocales": ["zh-Hans"],
+  "files": [{ "pattern": "locales/en.json" }]
+}

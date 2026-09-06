@@ -1,0 +1,60 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. Swap button. Fixed-data demonstration only.
+msgid "swap.submit"
+msgstr "Swap"
+
+#. Swap settings label. Candidate glossary: slippage = 滑点.
+msgid "swap.slippage"
+msgstr "Slippage tolerance"
+
+#. Confirmation warning. This is not an assurance about transaction outcome.
+msgid "swap.warning"
+msgstr "Your transaction may fail if the price changes."
+
+#. Fee estimate with a named value and an unchanged token symbol.
+msgid "swap.fee"
+msgstr "Network fee: {fee} SOL"
+
+#. Wallet balance in the swap input. Not a financial account balance.
+msgid "wallet.balance"
+msgstr "Balance"
+
+#. Selected wallet name supplied by the application.
+msgid "wallet.connected"
+msgstr "Connected to {wallet}"
+
+#. Count of available exchange paths, not URL routes.
+msgid "swap.routes"
+msgstr "{count, plural, one {# route available} other {# routes available}}"
+
+#. Transaction status. Select keys are stable application values.
+msgid "swap.status"
+msgstr "{status, select, pending {Transaction pending} failed {Transaction failed} other {Transaction complete}}"
+
+#. Rich React link supplied by the application. Do not add a URL or attributes.
+msgid "swap.details"
+msgstr "Read <link>transaction details</link> before you confirm."
+
+#. Rich emphasis supplied by the application.
+msgid "swap.irreversible"
+msgstr "<strong>Transfers cannot be reversed.</strong> Check the address."
+
+#. Preserve the Jupiter product name and SOL and USDC token symbols.
+msgid "swap.product"
+msgstr "Swap SOL for USDC on Jupiter"
+
+#. Confirmation instruction. Preserve punctuation through PO parsing.
+msgid "swap.confirm"
+msgstr "Select \"Confirm\" to continue."
+
+#. Named amount and token. Never remove either placeholder.
+msgid "swap.receive"
+msgstr "You receive {amount} {token}"
+
+#. Long warning and short menu text both need review.
+msgid "swap.minimum"
+msgstr "The minimum amount received may differ from this estimate."
