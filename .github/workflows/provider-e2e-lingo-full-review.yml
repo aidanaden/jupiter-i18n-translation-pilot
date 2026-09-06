@@ -1,0 +1,90 @@
+name: Lingo full app human review test
+
+on:
+  pull_request:
+    branches:
+      - aidan/provider-e2e-lingo-base
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  prepare:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'aidan/provider-e2e-lingo-base' && startsWith(github.event.pull_request.head.ref, 'aidan/lingo-candidate-') && !github.event.pull_request.draft && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      digest: ${{ steps.packet.outputs.digest }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - id: packet
+        run: node scripts/provider-e2e/full-app-review-cli.mjs prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.packet.outputs.artifact-name }}
+          path: full-review-packet/
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: false
+
+  reviewed:
+    needs: prepare
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'aidan/provider-e2e-lingo-base' && startsWith(github.event.pull_request.head.ref, 'aidan/lingo-candidate-') && !github.event.pull_request.draft && github.run_attempt == 1
+    environment: provider-e2e-lingo-full-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.artifact-id }}
+          path: full-review-packet/
+          merge-multiple: true
+      - run: node scripts/provider-e2e/full-app-review-cli.mjs verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_REVIEW_DIGEST: ${{ needs.prepare.outputs.digest }}
+          REVIEW_ARTIFACT_ID: ${{ needs.prepare.outputs.artifact-id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lingo-full-review-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: full-review-receipt.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: false
+
+  lingo-delivery:
+    if: always()
+    needs: [prepare, reviewed]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: test "$PREPARE_RESULT" = success && test "$REVIEW_RESULT" = success
+        env:
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          REVIEW_RESULT: ${{ needs.reviewed.result }}
