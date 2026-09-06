@@ -90,7 +90,7 @@ export async function runFullAppReview(
   });
   await appendFile(
     env.GITHUB_STEP_SUMMARY,
-    `# Exact-head review verified\n\nRun: ${receipt.runId}; candidate: ${receipt.headSha}\n\nReviewer account ID: ${receipt.reviewerId}. Same-account workflow test only, not qualified Chinese review.\n\nDigest: ${receipt.digest}\n\nMerge allowed: false. Deployment allowed: false. The maintainer must separately authorize and verify those actions. A passed check alone is not protection against a repository writer who can change workflow YAML.\n`,
+    `# Exact-head review verified\n\nRun: ${receipt.runId}; candidate: ${receipt.headSha}\n\nReviewer account ID: ${receipt.reviewerId}. Same-account workflow test only, not qualified Chinese review.\n\nDigest: ${receipt.digest}\n\nMerge allowed: false. Deployment allowed: false. Branch protection is not checked by this workflow. The local maintainer check must verify branch protection and trusted workflow code before a request for merge or deployment approval. A passed check alone is not protection against a repository writer who can change workflow YAML.\n`,
   );
   return receipt;
 }

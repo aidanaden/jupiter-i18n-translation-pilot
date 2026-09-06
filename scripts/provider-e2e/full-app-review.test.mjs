@@ -9,6 +9,7 @@ import { parse } from "yaml";
 import { prepareFullAppReview, verifyFullAppReview } from "./full-app-review.mjs";
 import { runFullAppReview } from "./full-app-review-cli.mjs";
 import { lingoJsonToPo, poToLingoJson } from "./lingo-json.mjs";
+import { verifyMaintainerReview, verifyMaintainerPreflight } from "./maintainer-check.mjs";
 
 const repository = "aidanaden/jupiter-i18n-translation-pilot";
 const baseBranch = "aidan/provider-e2e-lingo-base";
@@ -112,8 +113,17 @@ async function fixture() {
       },
       required_pull_request_reviews: {
         required_approving_review_count: 0,
+        dismiss_stale_reviews: true,
+        require_code_owner_reviews: false,
+        require_last_push_approval: false,
         bypass_pull_request_allowances: { users: [], teams: [], apps: [] },
       },
+      required_linear_history: { enabled: true },
+      required_conversation_resolution: { enabled: true },
+      lock_branch: { enabled: false },
+      block_creations: { enabled: false },
+      allow_fork_syncing: { enabled: false },
+      restrictions: null,
       allow_force_pushes: { enabled: false },
       allow_deletions: { enabled: false },
     },
@@ -192,6 +202,8 @@ it("verifies the same artifact only after the required account approved this run
     artifactId: 99,
     environmentId: 21366555631,
     reviewerId: 26812563,
+    branchProtectionVerified: false,
+    maintainerVerificationRequired: true,
     deliveryAllowed: false,
     mergeAllowed: false,
     deploymentAllowed: false,
@@ -541,7 +553,226 @@ it.each([
 ])("rejects %s", async (_name, mutate) => {
   const input = await ready();
   mutate(input);
-  await expect(verifyFullAppReview(input)).rejects.toThrow();
+  const protectionCases = [
+    "admin branch bypass",
+    "loose status checks",
+    "wrong check app",
+    "missing PR protection",
+    "PR bypass",
+    "force push enabled",
+    "deletion enabled",
+  ];
+  if (protectionCases.includes(_name)) {
+    const maintainerInput = await maintainerReady();
+    mutate(maintainerInput);
+    await expect(verifyMaintainerPreflight(maintainerInput)).rejects.toThrow(
+      "Unsafe isolated branch protection",
+    );
+  } else await expect(verifyFullAppReview(input)).rejects.toThrow();
+});
+
+async function maintainerReady() {
+  const input = await ready();
+  const trustedTree = [
+    {
+      path: ".github/workflows/provider-e2e-lingo-full-review.yml",
+      mode: "100644",
+      type: "blob",
+      sha: "1".repeat(40),
+    },
+    {
+      path: "scripts/provider-e2e/full-app-review.mjs",
+      mode: "100644",
+      type: "blob",
+      sha: "2".repeat(40),
+    },
+    {
+      path: "scripts/provider-e2e/full-app-review-cli.mjs",
+      mode: "100644",
+      type: "blob",
+      sha: "3".repeat(40),
+    },
+    { path: "package.json", mode: "100644", type: "blob", sha: "4".repeat(40) },
+    { path: "pnpm-lock.yaml", mode: "100644", type: "blob", sha: "5".repeat(40) },
+    { path: target, mode: "100644", type: "blob", sha: "6".repeat(40) },
+  ];
+  for (const [sha, treeSha] of [
+    [baseSha, "7".repeat(40)],
+    [headSha, "8".repeat(40)],
+    [mergeSha, "9".repeat(40)],
+  ]) {
+    input.data[`${prefix}/git/commits/${sha}`] = {
+      sha,
+      tree: { sha: treeSha },
+      parents: sha === mergeSha ? [{ sha: baseSha }, { sha: headSha }] : [],
+    };
+    input.data[`${prefix}/git/trees/${treeSha}?recursive=1`] = {
+      sha: treeSha,
+      truncated: false,
+      tree: structuredClone(trustedTree),
+    };
+  }
+  input.data[`${prefix}/actions/runs/123`].status = "completed";
+  input.data[`${prefix}/actions/runs/123`].conclusion = "success";
+  input.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`] = {
+    total_count: 3,
+    jobs: ["prepare", "reviewed", "lingo-delivery"].map((name, id) => ({
+      id: id + 1,
+      name,
+      run_id: 123,
+      run_attempt: 1,
+      head_sha: headSha,
+      status: "completed",
+      conclusion: "success",
+    })),
+  };
+  const archiveDigest = "f".repeat(64);
+  input.data[`${prefix}/actions/artifacts/99`].digest = `sha256:${archiveDigest}`;
+  return { ...input, trustedBaseSha: baseSha, trustedTree, archiveDigest };
+}
+
+it("prepares without the Administration permission and marks branch protection as unchecked", async () => {
+  const input = await ready();
+  delete input.data[`${prefix}/branches/${encodeURIComponent(baseBranch)}/protection`];
+  const result = await verifyFullAppReview(input);
+  expect(result.maintainerVerificationRequired).toBe(true);
+  expect(result.branchProtectionVerified).toBe(false);
+  expect(result.mergeAllowed).toBe(false);
+});
+
+it("permits only readiness for user approval after local trust and live proof match", async () => {
+  const receipt = await verifyMaintainerReview(await maintainerReady());
+  expect(receipt.status).toBe("ready-for-user-approval");
+  expect(receipt.mergeAllowed).toBe(false);
+  expect(receipt.deploymentAllowed).toBe(false);
+  expect(receipt.freshVerificationRequiredBeforeAction).toBe(true);
+});
+
+it("rejects a head that changes during final verification", async () => {
+  const input = await maintainerReady();
+  const read = input.readGitHub;
+  let reads = 0;
+  input.readGitHub = async (path) => {
+    if (path === `${prefix}/pulls/21` && ++reads === 2) input.data[path].head.sha = firstSha;
+    return read(path);
+  };
+  await expect(verifyMaintainerReview(input)).rejects.toThrow("differs from the event");
+});
+
+it.each([
+  [
+    "wrong trusted base",
+    (x) => {
+      x.trustedBaseSha = firstSha;
+    },
+  ],
+  [
+    "missing branch protection",
+    (x) => {
+      delete x.data[`${prefix}/branches/${encodeURIComponent(baseBranch)}/protection`];
+    },
+  ],
+  [
+    "altered base executable",
+    (x) => {
+      x.data[`${prefix}/git/trees/${"7".repeat(40)}?recursive=1`].tree[1].sha = firstSha;
+    },
+  ],
+  [
+    "altered merge workflow",
+    (x) => {
+      x.data[`${prefix}/git/trees/${"9".repeat(40)}?recursive=1`].tree[0].sha = firstSha;
+    },
+  ],
+  [
+    "altered head workflow",
+    (x) => {
+      x.data[`${prefix}/git/trees/${"8".repeat(40)}?recursive=1`].tree[0].sha = firstSha;
+    },
+  ],
+  [
+    "truncated remote tree",
+    (x) => {
+      x.data[`${prefix}/git/trees/${"9".repeat(40)}?recursive=1`].truncated = true;
+    },
+  ],
+  [
+    "wrong merge parents",
+    (x) => {
+      x.data[`${prefix}/git/commits/${mergeSha}`].parents.reverse();
+    },
+  ],
+  [
+    "missing trusted workflow",
+    (x) => {
+      x.trustedTree.shift();
+    },
+  ],
+  [
+    "skipped review job",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].jobs[1].conclusion =
+        "skipped";
+    },
+  ],
+  [
+    "forged status only",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].jobs = [];
+    },
+  ],
+  [
+    "duplicate job",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].jobs[1].name = "prepare";
+    },
+  ],
+  [
+    "wrong job run",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].jobs[0].run_id = 124;
+    },
+  ],
+  [
+    "wrong job head",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].jobs[0].head_sha = firstSha;
+    },
+  ],
+  [
+    "incomplete jobs page",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123/attempts/1/jobs?per_page=100`].total_count = 4;
+    },
+  ],
+  [
+    "running workflow",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123`].status = "in_progress";
+    },
+  ],
+  [
+    "failed workflow",
+    (x) => {
+      x.data[`${prefix}/actions/runs/123`].conclusion = "failure";
+    },
+  ],
+  [
+    "wrong archive digest",
+    (x) => {
+      x.archiveDigest = "e".repeat(64);
+    },
+  ],
+  [
+    "missing artifact digest",
+    (x) => {
+      delete x.data[`${prefix}/actions/artifacts/99`].digest;
+    },
+  ],
+])("maintainer check rejects %s", async (_name, mutate) => {
+  const input = await maintainerReady();
+  mutate(input);
+  await expect(verifyMaintainerReview(input)).rejects.toThrow();
 });
 
 it("rejects malformed placeholders in a full 13-message candidate", async () => {

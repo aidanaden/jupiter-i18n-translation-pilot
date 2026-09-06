@@ -166,26 +166,6 @@ async function preflight(event, readGitHub) {
       policies.branch_policies[0].type === "branch",
     "Unexpected deployment branch policy",
   );
-  const protection = await readGitHub(
-    `${prefix}/branches/${encodeURIComponent(baseBranch)}/protection`,
-  );
-  const reviews = protection.required_pull_request_reviews;
-  const bypass = reviews?.bypass_pull_request_allowances;
-  requireValue(
-    protection.enforce_admins?.enabled === true &&
-      protection.required_status_checks?.strict === true &&
-      protection.required_status_checks.checks?.some(
-        (check) => check.context === "lingo-delivery" && check.app_id === 15368,
-      ) &&
-      protection.allow_force_pushes?.enabled === false &&
-      protection.allow_deletions?.enabled === false &&
-      reviews &&
-      bypass &&
-      [bypass.users, bypass.teams, bypass.apps].every(
-        (entries) => Array.isArray(entries) && entries.length === 0,
-      ),
-    "Unsafe isolated branch protection",
-  );
   await readGitHub(`${prefix}/pulls/${event.number}/files?per_page=100`).then(onlyTarget);
   const commits = await readGitHub(`${prefix}/pulls/${event.number}/commits?per_page=100`);
   requireValue(
@@ -234,6 +214,7 @@ function summary(packet, digest) {
     "UNREVIEWED. Read the English source, context, first committed draft, and candidate before approval.",
     "",
     "Same-account workflow-test reviewer: aidanaden. This is not qualified Chinese review or proof of independent roles. The first committed draft is not cryptographic proof of Lingo origin. No glossary is enforced. No merge or deployment is permitted by this packet.",
+    "Branch protection is not checked by this workflow. The local maintainer check must verify branch protection and trusted workflow code before a request for merge or deployment approval.",
     "",
     `PR: ${packet.event.number}; run: ${packet.event.runId}; attempt: 1`,
     `Base: ${packet.event.baseSha}`,
@@ -352,6 +333,8 @@ export async function verifyFullAppReview({ packet, expectedDigest, artifactId, 
     artifactId,
     environmentId,
     reviewerId: 26812563,
+    branchProtectionVerified: false,
+    maintainerVerificationRequired: true,
     deliveryAllowed: false,
     mergeAllowed: false,
     deploymentAllowed: false,
