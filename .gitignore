@@ -5,6 +5,7 @@ node_modules
 .env.*
 !.env.example
 dist
+dist-lingo-e2e
 .output
 worker-configuration.d.ts
 /scheduler/.wrangler
