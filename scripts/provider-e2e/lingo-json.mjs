@@ -5,19 +5,25 @@ import { validateCatalogs } from "./offline-runner.mjs";
 
 const po = formatter({ explicitIdAsDefault: true });
 const messagesSchema = z.record(z.string(), z.string().check(z.minLength(1)));
+const optionsSchema = z.strictObject({
+  expectedMessageCount: z.number().check(z.int(), z.minimum(12), z.maximum(20)),
+});
 
-export function poToLingoJson(sourcePo) {
+export function poToLingoJson(sourcePo, options = { expectedMessageCount: 14 }) {
+  const { expectedMessageCount } = z.parse(optionsSchema, options);
   const source = po.parse(z.parse(z.string(), sourcePo));
   const messages = z.parse(
     messagesSchema,
     Object.fromEntries(Object.entries(source).map(([id, entry]) => [id, entry.translation])),
   );
   if (
-    Object.keys(messages).length !== 14 ||
-    [...sourcePo.matchAll(/^msgid /gm)].length !== 15 ||
+    Object.keys(messages).length !== expectedMessageCount ||
+    [...sourcePo.matchAll(/^msgid /gm)].length !== expectedMessageCount + 1 ||
     Object.entries(source).some(([id, entry]) => entry.obsolete || entry.translation === id)
   )
-    throw new Error("Expected the 14-message English fixture with explicit IDs");
+    throw new Error(
+      `Expected the ${expectedMessageCount}-message English fixture with explicit IDs`,
+    );
   validateCatalogs({
     sourcePo,
     targetPo: po.serialize(source, { locale: "zh-Hans", sourceLocale: "en" }),
@@ -26,8 +32,8 @@ export function poToLingoJson(sourcePo) {
   return messages;
 }
 
-export function lingoJsonToPo(sourcePo, result) {
-  const sourceMessages = poToLingoJson(sourcePo);
+export function lingoJsonToPo(sourcePo, result, options = { expectedMessageCount: 14 }) {
+  const sourceMessages = poToLingoJson(sourcePo, options);
   const translations = z.parse(messagesSchema, result);
   if (
     JSON.stringify(Object.keys(sourceMessages).sort()) !==
