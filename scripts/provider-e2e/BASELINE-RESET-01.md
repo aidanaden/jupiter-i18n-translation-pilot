@@ -1,0 +1,15 @@
+# Exact baseline reset review
+
+The full app review has a separate reset purpose. Only a branch named `aidan/lingo-candidate-reset-<suffix>` can select it. The suffix must meet the existing candidate branch rules. Reset needs exactly one catalog-only commit from the current isolated base. The first committed target and the final target must be identical.
+
+The code reads the source and Chinese catalog at `ed5dc31e70930c8bdb7d3675d208dd99395647d2` through the existing bounded GitHub contents reader. Fixed SHA-256 values also check those exact bytes. The current base source must equal that source. The reset target must equal that Chinese catalog byte for byte. The existing app source adapter validates this pinned baseline. It permits the original empty `pilot.recording.proof` entry through its validated English fallback. It does not permit an arbitrary empty translation in reset mode.
+
+Ordinary translation branches still use strict catalog validation. The original blank proof entry fails that normal translation check. Reset packets use version `full-app-review-v2`, purpose `reset-baseline`, and the explicit baseline SHA. Normal packets use purpose `translation-review` and a null reset baseline SHA. The summary labels the table as baseline restoration, not a new AI translation. Each new packet has a new digest. Historical packets cannot approve it.
+
+The same protected environment and actual human approval are required. The local maintainer check still verifies current branch protection, trusted code, exact artifact, successful workflow, and current content. Merge and deployment still need separate approval. All packet and receipt delivery, merge, and deployment flags remain false. The same-account reviewer is a workflow-test reviewer, not proof of qualified Chinese review.
+
+This change does not alter the app, build, workflow, catalogs, or runtime fallback. Existing isolated runtime evidence remains applicable because the app and its baseline bytes are unchanged. The reset mode handles the same original empty proof entry already supported by that runtime. These new tests prove the review boundary, not a live reset or recording.
+
+The setup PR remains a separate bootstrap step. Its non-candidate branch skips the review jobs, and the final `lingo-delivery` gate fails. This change does not weaken that gate. Setup CI results and exact bootstrap merge approval must be handled separately before branch protection requires the candidate gate.
+
+Local checks passed: formatting fix and check, lint fix and check, scheduler type generation, and type check. The full serial test suite passed all 343 tests in 19 files. The full review suite has 98 tests. The new cases check the exact pin, blank-proof normal rejection, source and target byte changes, extra blanks and commits, incorrect branch and merge references, unrelated files, truncated pinned contents, missing fresh approval, changed purpose and pin, and the unchanged maintainer code check. No provider job, network write, push, merge, deployment, or live reset was used.

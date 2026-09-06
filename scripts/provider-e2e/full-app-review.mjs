@@ -11,6 +11,10 @@ const baseBranch = "aidan/provider-e2e-lingo-base";
 const environment = "provider-e2e-lingo-full-review";
 const target = "src/i18n/locales/zh-Hans/messages.po";
 const source = "src/i18n/locales/en/messages.po";
+const resetPrefix = "aidan/lingo-candidate-reset-";
+const resetBaselineSha = "ed5dc31e70930c8bdb7d3675d208dd99395647d2";
+const resetSourceHash = "d04afe258a31159ff49d6f289142f0601fea4b5cf10bce21661eb008f945679e";
+const resetTargetHash = "f3191053363fdd0878cdb7c6d282fdc629877452821cf1b4d731668b0f918931";
 const prefix = `/repos/${repository}`;
 const shaSchema = z.string().check(z.regex(/^[a-f0-9]{40}$/));
 const positiveId = z.number().check(z.int(), z.positive(), z.maximum(Number.MAX_SAFE_INTEGER));
@@ -98,6 +102,8 @@ async function preflight(event, readGitHub) {
       pr.commits <= 10,
     "The current pull request differs from the event",
   );
+  if (event.headBranch.startsWith(resetPrefix))
+    requireValue(pr.commits === 1, "A baseline reset requires exactly one catalog-only commit");
   for (const [branch, sha] of [
     [baseBranch, event.baseSha],
     [event.headBranch, event.headSha],
@@ -208,10 +214,13 @@ function summary(packet, digest) {
   const english = po.parse(packet.sourcePo);
   const raw = po.parse(packet.rawTargetPo);
   const candidate = po.parse(packet.candidatePo);
+  const reset = packet.purpose === "reset-baseline";
   return [
-    "# Full app translation review",
+    reset ? "# Full app baseline reset review" : "# Full app translation review",
     "",
-    "UNREVIEWED. Read the English source, context, first committed draft, and candidate before approval.",
+    reset
+      ? "UNREVIEWED RESET. Check restoration of the exact pinned baseline before approval. This is not a new AI translation."
+      : "UNREVIEWED. Read the English source, context, first committed draft, and candidate before approval.",
     "",
     "Same-account workflow-test reviewer: aidanaden. This is not qualified Chinese review or proof of independent roles. The first committed draft is not cryptographic proof of Lingo origin. No glossary is enforced. No merge or deployment is permitted by this packet.",
     "Branch protection is not checked by this workflow. The local maintainer check must verify branch protection and trusted workflow code before a request for merge or deployment approval.",
@@ -220,9 +229,17 @@ function summary(packet, digest) {
     `Base: ${packet.event.baseSha}`,
     `Candidate: ${packet.event.headSha}`,
     `First draft: ${packet.firstDraftSha}`,
+    ...(reset
+      ? [
+          `Reset baseline: ${packet.resetBaselineSha}`,
+          "The empty pilot.recording.proof entry is part of this exact baseline. Its existing English fallback is restored. No other blank translation is permitted by this reset mode.",
+        ]
+      : []),
     `Packet SHA-256: ${digest}`,
     "",
-    "| ID | English | Context | First committed draft | Candidate |",
+    reset
+      ? "| ID | English | Context | Pinned baseline | Reset candidate |"
+      : "| ID | English | Context | First committed draft | Candidate |",
     "| --- | --- | --- | --- | --- |",
     ...Object.keys(english).map(
       (id) =>
@@ -251,10 +268,34 @@ export async function prepareFullAppReview({
   createAppSourcePacket({ sourcePo, baselineTargetPo, gitHead: event.baseSha });
   const rawTargetPo = await contents(target, context.firstDraftSha, readGitHub);
   const candidatePo = await contents(target, event.headSha, readGitHub);
-  for (const targetPo of [rawTargetPo, candidatePo])
-    validateCatalogs({ sourcePo, targetPo, glossary: { terms: [] } });
+  const reset = event.headBranch.startsWith(resetPrefix);
+  if (reset) {
+    const pinnedSource = await contents(source, resetBaselineSha, readGitHub);
+    const pinnedTarget = await contents(target, resetBaselineSha, readGitHub);
+    requireValue(
+      hash(pinnedSource) === resetSourceHash && hash(pinnedTarget) === resetTargetHash,
+      "The pinned reset baseline bytes differ",
+    );
+    requireValue(sourcePo === pinnedSource, "Reset requires the exact original source");
+    requireValue(
+      context.firstDraftSha === event.headSha &&
+        rawTargetPo === pinnedTarget &&
+        candidatePo === pinnedTarget,
+      "Reset requires the exact pinned target in one commit",
+    );
+    createAppSourcePacket({
+      sourcePo: pinnedSource,
+      baselineTargetPo: pinnedTarget,
+      gitHead: resetBaselineSha,
+    });
+  } else {
+    for (const targetPo of [rawTargetPo, candidatePo])
+      validateCatalogs({ sourcePo, targetPo, glossary: { terms: [] } });
+  }
   const packet = {
-    version: "full-app-review-v1",
+    version: "full-app-review-v2",
+    purpose: reset ? "reset-baseline" : "translation-review",
+    resetBaselineSha: reset ? resetBaselineSha : null,
     event,
     ...context,
     sourcePo,
@@ -268,6 +309,8 @@ export async function prepareFullAppReview({
       candidatePo: hash(candidatePo),
     },
     deliveryAllowed: false,
+    mergeAllowed: false,
+    deploymentAllowed: false,
   };
   const digest = hash(JSON.stringify(packet));
   return {
@@ -322,6 +365,8 @@ export async function verifyFullAppReview({ packet, expectedDigest, artifactId, 
   );
   return {
     status: "reviewed-exact-head",
+    purpose: current.packet.purpose,
+    resetBaselineSha: current.packet.resetBaselineSha,
     digest: expectedDigest,
     repository,
     pullRequest: event.number,

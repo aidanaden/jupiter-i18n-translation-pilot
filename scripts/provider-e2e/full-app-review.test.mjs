@@ -21,6 +21,8 @@ const firstSha = "b".repeat(40);
 const headSha = "c".repeat(40);
 const mergeSha = "d".repeat(40);
 const prefix = `/repos/${repository}`;
+const resetBaselineSha = "ed5dc31e70930c8bdb7d3675d208dd99395647d2";
+const resetBranch = "aidan/lingo-candidate-reset-test-01";
 
 async function fixture() {
   const sourcePo = await readFile(new URL(`../../${source}`, import.meta.url), "utf8");
@@ -162,19 +164,21 @@ it("prepares the 13-message app and retains the first draft and corrected candid
   expect(result.packet.candidatePo).toBe(input.candidatePo);
   expect(result.packet.firstDraftSha).toBe(firstSha);
   expect(result.packet.deliveryAllowed).toBe(false);
+  expect(result.packet.purpose).toBe("translation-review");
+  expect(result.packet.resetBaselineSha).toBeNull();
   expect(result.markdown).toContain("测试初稿");
   expect(result.markdown).toContain("测试修订");
   expect(result.markdown).toContain("not qualified Chinese review");
 });
 
-async function ready() {
-  const input = await fixture();
+async function ready(provided) {
+  const input = provided ?? (await fixture());
   const prepared = await prepareFullAppReview(input);
   input.data[`${prefix}/actions/artifacts/99`] = {
     id: 99,
     name: prepared.artifactName,
     expired: false,
-    workflow_run: { id: 123, head_sha: headSha, head_branch: headBranch },
+    workflow_run: { id: 123, head_sha: headSha, head_branch: input.event.headBranch },
   };
   input.data[`${prefix}/actions/runs/123/approvals`] = [
     {
@@ -191,6 +195,8 @@ it("verifies the same artifact only after the required account approved this run
   const receipt = await verifyFullAppReview(input);
   expect(receipt).toEqual({
     status: "reviewed-exact-head",
+    purpose: "translation-review",
+    resetBaselineSha: null,
     digest: input.digest,
     repository,
     pullRequest: 21,
@@ -571,8 +577,8 @@ it.each([
   } else await expect(verifyFullAppReview(input)).rejects.toThrow();
 });
 
-async function maintainerReady() {
-  const input = await ready();
+async function maintainerReady(provided) {
+  const input = provided ?? (await ready());
   const trustedTree = [
     {
       path: ".github/workflows/provider-e2e-lingo-full-review.yml",
@@ -638,6 +644,208 @@ it("prepares without the Administration permission and marks branch protection a
   expect(result.maintainerVerificationRequired).toBe(true);
   expect(result.branchProtectionVerified).toBe(false);
   expect(result.mergeAllowed).toBe(false);
+});
+
+async function resetFixture() {
+  const input = await fixture();
+  const pinnedTarget = input.baselineTargetPo;
+  input.baselineTargetPo = input.candidatePo;
+  input.rawTargetPo = pinnedTarget;
+  input.candidatePo = pinnedTarget;
+  input.event.headBranch = resetBranch;
+  input.data[`${prefix}/pulls/21`].head.ref = resetBranch;
+  input.data[`${prefix}/pulls/21`].commits = 1;
+  input.data[`${prefix}/actions/runs/123`].head_branch = resetBranch;
+  input.data[`${prefix}/git/ref/heads/${encodeURIComponent(resetBranch)}`] = {
+    object: { sha: headSha },
+  };
+  input.data[`${prefix}/pulls/21/commits?per_page=100`] = [{ sha: headSha }];
+  input.data[`${prefix}/commits/${headSha}?per_page=100`].parents = [{ sha: baseSha }];
+  for (const [path, sha, content] of [
+    [source, resetBaselineSha, input.sourcePo],
+    [target, resetBaselineSha, pinnedTarget],
+    [target, baseSha, input.baselineTargetPo],
+    [target, headSha, pinnedTarget],
+  ])
+    input.data[`${prefix}/contents/${path}?ref=${sha}`] = {
+      type: "file",
+      path,
+      size: Buffer.byteLength(content),
+      content: Buffer.from(content).toString("base64"),
+      encoding: "base64",
+    };
+  return input;
+}
+
+function replaceContents(input, path, sha, content) {
+  input.data[`${prefix}/contents/${path}?ref=${sha}`] = {
+    type: "file",
+    path,
+    size: Buffer.byteLength(content),
+    content: Buffer.from(content).toString("base64"),
+    encoding: "base64",
+  };
+}
+
+it("prepares only the exact pinned baseline reset and clearly labels the fallback", async () => {
+  const input = await resetFixture();
+  const result = await prepareFullAppReview(input);
+  expect(result.packet).toMatchObject({
+    version: "full-app-review-v2",
+    purpose: "reset-baseline",
+    resetBaselineSha,
+    firstDraftSha: headSha,
+    rawTargetPo: input.candidatePo,
+    candidatePo: input.candidatePo,
+    deliveryAllowed: false,
+  });
+  expect(result.packet.hashes.candidatePo).toBe(
+    "f3191053363fdd0878cdb7c6d282fdc629877452821cf1b4d731668b0f918931",
+  );
+  expect(result.packet.candidatePo).toContain('msgid "pilot.recording.proof"\nmsgstr ""');
+  expect(result.markdown).toContain("UNREVIEWED RESET");
+  expect(result.markdown).toContain("not a new AI translation");
+  expect(result.markdown).toContain("Pinned baseline | Reset candidate");
+  expect(result.markdown).toContain("English fallback is restored");
+  expect(result.markdown).toContain(resetBaselineSha);
+});
+
+it("does not accept the blank baseline on a normal translation branch", async () => {
+  const input = await fixture();
+  replaceContents(input, target, headSha, input.baselineTargetPo);
+  await expect(prepareFullAppReview(input)).rejects.toThrow("missing translation");
+});
+
+it.each([
+  ["one target byte", (input) => replaceContents(input, target, headSha, input.candidatePo + "\n")],
+  [
+    "changed source",
+    (input) => {
+      input.sourcePo += "\n";
+      replaceContents(input, source, baseSha, input.sourcePo);
+    },
+  ],
+  [
+    "wrong pinned source",
+    (input) => replaceContents(input, source, resetBaselineSha, input.sourcePo + "\n"),
+  ],
+  [
+    "wrong pinned target",
+    (input) => replaceContents(input, target, resetBaselineSha, input.candidatePo + "\n"),
+  ],
+  [
+    "extra blank translation",
+    (input) =>
+      replaceContents(
+        input,
+        target,
+        headSha,
+        input.candidatePo.replace('msgstr "查看兑换"', 'msgstr ""'),
+      ),
+  ],
+  [
+    "extra commit",
+    (input) => {
+      input.data[`${prefix}/pulls/21`].commits = 2;
+      input.data[`${prefix}/pulls/21/commits?per_page=100`] = [{ sha: firstSha }, { sha: headSha }];
+      input.data[`${prefix}/commits/${headSha}?per_page=100`].parents = [{ sha: firstSha }];
+    },
+  ],
+  [
+    "wrong current ref",
+    (input) => {
+      input.data[`${prefix}/git/ref/heads/${encodeURIComponent(resetBranch)}`].object.sha =
+        firstSha;
+    },
+  ],
+  [
+    "wrong parent ref",
+    (input) => {
+      input.data[`${prefix}/commits/${headSha}?per_page=100`].parents = [{ sha: firstSha }];
+    },
+  ],
+  [
+    "no suffix",
+    (input) => {
+      input.event.headBranch = "aidan/lingo-candidate-reset-";
+    },
+  ],
+  [
+    "wrong prefix",
+    (input) => {
+      input.event.headBranch = "aidan/lingo-reset-test-01";
+    },
+  ],
+  [
+    "ordinary candidate prefix",
+    (input) => {
+      input.event.headBranch = headBranch;
+      input.data[`${prefix}/pulls/21`].head.ref = headBranch;
+      input.data[`${prefix}/actions/runs/123`].head_branch = headBranch;
+    },
+  ],
+  [
+    "wrong merge ref",
+    (input) => {
+      input.event.ref = "refs/pull/22/merge";
+    },
+  ],
+  [
+    "extra changed path",
+    (input) => {
+      input.data[`${prefix}/pulls/21/files?per_page=100`].push({
+        filename: "package.json",
+        status: "modified",
+      });
+    },
+  ],
+  [
+    "truncated pinned response",
+    (input) => {
+      input.data[`${prefix}/contents/${target}?ref=${resetBaselineSha}`].truncated = true;
+    },
+  ],
+])("rejects baseline reset with %s", async (_label, mutate) => {
+  const input = await resetFixture();
+  mutate(input);
+  await expect(prepareFullAppReview(input)).rejects.toThrow();
+});
+
+it("requires fresh reset approval and the full maintainer code and policy check", async () => {
+  const input = await ready(await resetFixture());
+  const approvals = input.data[`${prefix}/actions/runs/123/approvals`];
+  input.data[`${prefix}/actions/runs/123/approvals`] = [];
+  await expect(verifyFullAppReview(input)).rejects.toThrow("human approval");
+  input.data[`${prefix}/actions/runs/123/approvals`] = approvals;
+  const receipt = await verifyFullAppReview(input);
+  expect(receipt).toMatchObject({
+    purpose: "reset-baseline",
+    resetBaselineSha,
+    firstDraftSha: headSha,
+    deliveryAllowed: false,
+    mergeAllowed: false,
+    deploymentAllowed: false,
+    maintainerVerificationRequired: true,
+  });
+  const maintainerInput = await maintainerReady(input);
+  expect(await verifyMaintainerReview(maintainerInput)).toMatchObject({
+    status: "ready-for-user-approval",
+    purpose: "reset-baseline",
+    deliveryAllowed: false,
+    mergeAllowed: false,
+    deploymentAllowed: false,
+  });
+  maintainerInput.data[`${prefix}/git/trees/${"8".repeat(40)}?recursive=1`].tree[0].sha =
+    "0".repeat(40);
+  await expect(verifyMaintainerReview(maintainerInput)).rejects.toThrow("workflow differs");
+});
+
+it("rejects changed reset purpose, pinned SHA, or candidate after preparation", async () => {
+  for (const field of ["purpose", "resetBaselineSha", "candidatePo"]) {
+    const input = await ready(await resetFixture());
+    input.packet[field] = "changed";
+    await expect(verifyFullAppReview(input)).rejects.toThrow("packet changed");
+  }
 });
 
 it("permits only readiness for user approval after local trust and live proof match", async () => {
