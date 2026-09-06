@@ -6,7 +6,7 @@ Date: 7 September 2026. Integration branch: `aidan/lingo-app-delivery`.
 
 The app catalog adapter, exact-content review workflow, isolated build, local maintainer verifier, fresh-catalog SSR checks, and local cycle safety helpers are combined. This is not a full recording or live delivery receipt.
 
-The source catalog and all application files are unchanged from `ed5dc31e70930c8bdb7d3675d208dd99395647d2`. No push, paid generation, merge, deployment, or Cloudflare setting change occurred during this continuation.
+The source catalog and all application files are unchanged from `ed5dc31e70930c8bdb7d3675d208dd99395647d2`. The first continuation made no push, paid generation, merge, deployment, or Cloudflare setting change. The later continuation below records the approved build-setting change and the completed reset checks.
 
 ## Evidence
 
@@ -26,7 +26,7 @@ GitHub's [Get branch protection API](https://docs.github.com/en/rest/branches/br
 
 The local verifier compares the remote base, candidate, and merge trees with the reviewed local base. Only the Chinese PO may differ. It checks the actual successful jobs and the downloaded artifact digest. All receipts still forbid merge and deployment without separate user approval.
 
-## Remaining work
+## Work remaining after the first continuation
 
 1. Obtain permission to disable only non-production builds for the existing pilot Worker. Test pushes currently upload versions there. Keep `main` production builds and both schedulers unchanged.
 2. Add and test the exact-baseline reset review mode described in the runbook. The current normal translation gate rejects the baseline's empty proof entry. Do not bypass that gate.
@@ -34,3 +34,13 @@ The local verifier compares the remote base, candidate, and merge trees with the
 4. Verify the real workflow and reset path, then start capture before the single approved generation. Record the complete new cycle, including human review, isolated delivery, correction retention, and reset.
 
 The frontend test-selection skill kept tests at the catalog and workflow boundaries. Existing Lingui validators were reused. The offline runner's simulated actor and release state were not reused as human or live approval evidence. Pstack PR creation remains on hold because a push would cause an unapproved write to the existing Worker.
+
+## Later continuation
+
+The owner approved the build-setting change. `CF-BUILD-BOUNDARY-01.md` records the saved setting and unchanged live pilot version. The push restriction described above is resolved.
+
+The exact-baseline reset review is implemented in `889c1ce`. Its normal translation path remains strict. The test-fixture correction in `1778226` makes original-baseline tests independent of the candidate's current Chinese catalog. `BASELINE-RESET-01.md` records 343 passing tests against a separate full synthetic candidate checkout, including the normal parallel test command. These local results do not replace a live reset or human review.
+
+The root's combined normal test command at `1778226` had 342 passes and one real-CLI startup timeout at 6.1 seconds against its 5-second test limit. No assertion failed. This attempt remains a failure.
+
+Commit `e7e878f` gives only the two real CLI tests a 30-second limit. Each child process has a 10-second timeout and a forced termination signal. No assertions, application code, or global test timeout changed. The root's normal `pnpm run test` then passed all 343 tests in 19 files. Format fix, lint fix, format check, lint check, and typecheck passed. These results cover the integrated baseline checkout. The separate synthetic candidate check remains valid because its catalog and assertions did not change.

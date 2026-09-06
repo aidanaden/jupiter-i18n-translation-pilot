@@ -37,7 +37,7 @@ The current UI footer shows a short commit ID and a catalog timestamp. It does n
 
 Steps 9 and 10 have local data-integrity helpers, but still need live verification. The caller must read the real Git and deployed state before it uses those helpers. A local simulation is not a substitute.
 
-The reset review path is still open: the original baseline contains an empty `pilot.recording.proof` entry. The normal full-translation check correctly rejects it. Add a separately labelled reset mode that permits only the exact source and target bytes pinned at `ed5dc31e70930c8bdb7d3675d208dd99395647d2`, through one catalog-only commit and a fresh protected review. Do not weaken normal translation validation or start paid generation before this path is verified.
+The reset review mode permits only the exact source and target bytes pinned at `ed5dc31e70930c8bdb7d3675d208dd99395647d2`, through one catalog-only commit and a fresh protected review. Use a branch named `aidan/lingo-candidate-reset-<suffix>`. The original baseline contains an empty `pilot.recording.proof` entry; this exact reset restores its English fallback. The normal full-translation check still rejects that empty entry. The reset path needs live verification before paid generation. See `BASELINE-RESET-01.md` for the local checks.
 
 ## Editing rules
 
