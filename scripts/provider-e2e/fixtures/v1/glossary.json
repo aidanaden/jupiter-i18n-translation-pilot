@@ -1,0 +1,11 @@
+{
+  "revision": "candidate-v1",
+  "status": "OFFLINE CANDIDATE. NOT HUMAN APPROVED.",
+  "locale": "zh-Hans",
+  "terms": [
+    { "source": "Slippage", "target": "滑点", "ids": ["swap.slippage"] },
+    { "source": "Jupiter", "target": "Jupiter", "ids": ["swap.product"] },
+    { "source": "SOL", "target": "SOL", "ids": ["swap.product", "swap.fee"] },
+    { "source": "USDC", "target": "USDC", "ids": ["swap.product"] }
+  ]
+}

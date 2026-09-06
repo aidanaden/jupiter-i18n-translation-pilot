@@ -23,13 +23,17 @@ const catalogTimestamp = readGit(
   new Date().toISOString(),
 );
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  build: mode === "lingo-e2e" ? { outDir: "dist-lingo-e2e" } : undefined,
   define: {
     __CATALOG_TIMESTAMP__: JSON.stringify(catalogTimestamp),
     __DEPLOYED_COMMIT__: JSON.stringify(deployedCommit.slice(0, 12)),
   },
   plugins: [
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
+    cloudflare({
+      configPath: mode === "lingo-e2e" ? "wrangler.lingo-e2e.jsonc" : "wrangler.jsonc",
+      viteEnvironment: { name: "ssr" },
+    }),
     tanstackStart({
       prerender: {
         enabled: false,
@@ -47,4 +51,4 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
-});
+}));

@@ -32,9 +32,18 @@ jobs:
           git diff --exit-code -- .
           ':(exclude)src/i18n/locales/zh-Hans/messages.po'
           ':(exclude)src/i18n/locales/zh-Hans/messages.ts'
-      - run: pnpm run verify:ssr
-      - run: pnpm run verify:rehearsal-reset-plan
-      - run: pnpm run verify:rehearsal-reset-execution
-      - run: pnpm run verify:rehearsal-translated
-      - run: pnpm run deploy:dry-run
+      - if: github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:ssr:lingo-e2e
+      - if: github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:lingo-e2e:dry-run
+      - if: github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:ssr
+      - if: github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:rehearsal-reset-plan
+      - if: github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:rehearsal-reset-execution
+      - if: github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'
+        run: pnpm run verify:rehearsal-translated
+      - if: github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'
+        run: pnpm run deploy:dry-run
       - run: pnpm run scheduler:deploy:dry-run

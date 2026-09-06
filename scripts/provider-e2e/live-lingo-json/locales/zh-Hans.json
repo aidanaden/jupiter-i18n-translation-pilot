@@ -1,0 +1,16 @@
+{
+  "swap.submit": "兑换",
+  "swap.slippage": "滑点容忍度",
+  "swap.warning": "如果价格发生变化，您的交易可能会失败。",
+  "swap.fee": "网络费用：{fee} SOL",
+  "wallet.balance": "余额",
+  "wallet.connected": "已连接至 {wallet}",
+  "swap.routes": "{count, plural, other {# 条可用路线}}",
+  "swap.status": "{status, select, pending {交易待处理} failed {交易失败} other {交易完成}}",
+  "swap.details": "确认前请阅读 <link>交易详情</link>。",
+  "swap.irreversible": "<strong>转账不可撤销。</strong>请核对地址。",
+  "swap.product": "在 Jupiter 上将 SOL 兑换为 USDC",
+  "swap.confirm": "选择\"确认\"以继续。",
+  "swap.receive": "您将收到 {amount} {token}",
+  "swap.minimum": "实际最低到账金额可能与此估算有所不同。"
+}
