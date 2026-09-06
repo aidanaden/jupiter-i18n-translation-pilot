@@ -5,12 +5,22 @@ import { createServer } from "node:net";
 import * as z from "zod/v4-mini";
 
 import { REHEARSAL_FIXTURE } from "./rehearsal-baseline.mjs";
+import { readSsrExpectations } from "./ssr-catalog.mjs";
 
-const REHEARSAL_PSEUDO = "⟦       Ţŕàńśĺàţĩōń ŕēĥēàŕśàĺ ćōḿƥĺēţē       ⟧";
+const args = process.argv.slice(2);
+assert.ok(
+  args.length === 0 || (args.length === 1 && args[0] === "--lingo-e2e"),
+  "Usage: node scripts/verify-ssr.mjs [--lingo-e2e]",
+);
+const lingoE2e = args[0] === "--lingo-e2e";
 
 const englishCatalog = await readFile("src/i18n/locales/en/messages.po", "utf8");
 const simplifiedChineseCatalog = await readFile("src/i18n/locales/zh-Hans/messages.po", "utf8");
-const rehearsalState = readRehearsalState({ englishCatalog, simplifiedChineseCatalog });
+const { state: rehearsalState, cases } = readSsrExpectations({
+  englishCatalog,
+  simplifiedChineseCatalog,
+  lingoE2e,
+});
 
 const port = await new Promise((resolve, reject) => {
   const socket = createServer();
@@ -23,7 +33,20 @@ const port = await new Promise((resolve, reject) => {
 
 const preview = spawn(
   "pnpm",
-  ["exec", "vite", "preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+  lingoE2e
+    ? [
+        "exec",
+        "wrangler",
+        "dev",
+        "--config",
+        "dist-lingo-e2e/server/wrangler.json",
+        "--local",
+        "--ip",
+        "127.0.0.1",
+        "--port",
+        String(port),
+      ]
+    : ["exec", "vite", "preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
   {
     env: { ...process.env, NO_COLOR: "1" },
     stdio: ["ignore", "pipe", "pipe"],
@@ -54,29 +77,6 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 
-  const cases = [
-    {
-      locale: "en",
-      marker: "Review swap",
-      rehearsalMarker: rehearsalState === "baseline" ? null : REHEARSAL_FIXTURE.source,
-    },
-    {
-      locale: "zh-Hans",
-      marker: "查看兑换",
-      rehearsalMarker:
-        rehearsalState === "baseline"
-          ? null
-          : rehearsalState === "translated"
-            ? REHEARSAL_FIXTURE.target
-            : REHEARSAL_FIXTURE.source,
-    },
-    {
-      locale: "en-XA",
-      marker: "Ŕēvĩēŵ śŵàƥ",
-      rehearsalMarker: rehearsalState === "baseline" ? null : REHEARSAL_PSEUDO,
-    },
-  ];
-
   for (const { locale, marker, rehearsalMarker } of cases) {
     const response = await fetch(`${baseUrl}/?locale=${locale}&page=swap`);
     assert.equal(response.status, 200);
@@ -100,25 +100,4 @@ try {
   console.log(`SSR preview verified for en, zh-Hans, and en-XA in ${rehearsalState} state.`);
 } finally {
   preview.kill("SIGTERM");
-}
-
-function readRehearsalState({ englishCatalog, simplifiedChineseCatalog }) {
-  const englishValue = readPoValue(englishCatalog, REHEARSAL_FIXTURE.messageId);
-  const simplifiedChineseValue = readPoValue(simplifiedChineseCatalog, REHEARSAL_FIXTURE.messageId);
-
-  if (englishValue === null && simplifiedChineseValue === null) return "baseline";
-  assert.equal(englishValue, REHEARSAL_FIXTURE.source, "The rehearsal source text changed");
-  if (simplifiedChineseValue === "") return "source";
-  assert.equal(
-    simplifiedChineseValue,
-    REHEARSAL_FIXTURE.target,
-    "The rehearsal target must be empty or the reviewed fixed translation",
-  );
-  return "translated";
-}
-
-function readPoValue(catalog, messageId) {
-  const escapedMessageId = messageId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = catalog.match(new RegExp(`msgid "${escapedMessageId}"\\nmsgstr "([^"]*)"`));
-  return match?.[1] ?? null;
 }
