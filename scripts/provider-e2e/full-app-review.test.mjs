@@ -1,7 +1,8 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { expect, it } from "vitest";
 import { parse } from "yaml";
@@ -23,6 +24,10 @@ const mergeSha = "d".repeat(40);
 const prefix = `/repos/${repository}`;
 const resetBaselineSha = "ed5dc31e70930c8bdb7d3675d208dd99395647d2";
 const resetBranch = "aidan/lingo-candidate-reset-test-01";
+const pinnedTarget = execFileSync("git", ["show", `${resetBaselineSha}:${target}`], {
+  cwd: fileURLToPath(new URL("../../", import.meta.url)),
+  encoding: "utf8",
+});
 
 async function fixture() {
   const sourcePo = await readFile(new URL(`../../${source}`, import.meta.url), "utf8");
@@ -648,7 +653,6 @@ it("prepares without the Administration permission and marks branch protection a
 
 async function resetFixture() {
   const input = await fixture();
-  const pinnedTarget = input.baselineTargetPo;
   input.baselineTargetPo = input.candidatePo;
   input.rawTargetPo = pinnedTarget;
   input.candidatePo = pinnedTarget;
@@ -712,7 +716,7 @@ it("prepares only the exact pinned baseline reset and clearly labels the fallbac
 
 it("does not accept the blank baseline on a normal translation branch", async () => {
   const input = await fixture();
-  replaceContents(input, target, headSha, input.baselineTargetPo);
+  replaceContents(input, target, headSha, pinnedTarget);
   await expect(prepareFullAppReview(input)).rejects.toThrow("missing translation");
 });
 
@@ -735,13 +739,11 @@ it.each([
   ],
   [
     "extra blank translation",
-    (input) =>
-      replaceContents(
-        input,
-        target,
-        headSha,
-        input.candidatePo.replace('msgstr "查看兑换"', 'msgstr ""'),
-      ),
+    (input) => {
+      const changed = input.candidatePo.replace('msgstr "查看兑换"', 'msgstr ""');
+      expect(changed).not.toBe(input.candidatePo);
+      replaceContents(input, target, headSha, changed);
+    },
   ],
   [
     "extra commit",

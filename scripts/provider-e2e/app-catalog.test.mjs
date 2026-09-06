@@ -1,4 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 import { formatter } from "@lingui/format-po";
 import { setupI18n } from "@lingui/core";
@@ -15,10 +17,11 @@ const po = formatter({ explicitIdAsDefault: true });
 const gitHead = "ed5dc31e70930c8bdb7d3675d208dd99395647d2";
 
 async function input() {
-  const [sourcePo, baselineTargetPo] = await Promise.all(
-    ["en", "zh-Hans"].map((locale) =>
-      readFile(new URL(`../../src/i18n/locales/${locale}/messages.po`, import.meta.url), "utf8"),
-    ),
+  const [sourcePo, baselineTargetPo] = ["en", "zh-Hans"].map((locale) =>
+    execFileSync("git", ["show", `${gitHead}:src/i18n/locales/${locale}/messages.po`], {
+      cwd: fileURLToPath(new URL("../../", import.meta.url)),
+      encoding: "utf8",
+    }),
   );
   return { sourcePo, baselineTargetPo, gitHead };
 }
