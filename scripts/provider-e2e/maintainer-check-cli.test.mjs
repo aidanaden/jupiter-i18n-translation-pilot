@@ -1,3 +1,9 @@
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { expect, it } from "vitest";
 
 import {
@@ -73,8 +79,3 @@ it("reads only the two expected artifact entries and returns the ZIP digest", as
     await rm(directory, { recursive: true, force: true });
   }
 });
-import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
