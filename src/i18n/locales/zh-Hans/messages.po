@@ -52,12 +52,12 @@ msgstr "通过 {jupiter} 充值"
 #. Primary action that opens the fixed swap review in the translation sandbox.
 #: src/i18n/messages.ts
 msgid "baseline.swap.review"
-msgstr "[WORKFLOW TEST CORRECTED] 查看兑换"
+msgstr "查看兑换"
 
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
 #: src/i18n/messages.ts
 msgid "pilot.recording.proof"
-msgstr "[WORKFLOW TEST CORRECTED] Translation rehearsal complete"
+msgstr ""
 
 #. Sandbox-only empty state shown without a network request.
 #: src/i18n/messages.ts
