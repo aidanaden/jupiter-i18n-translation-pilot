@@ -1,73 +1,80 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-09-07 08:46+0800\n"
+"POT-Creation-Date: 2026-08-27 05:19+0800\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
+"X-Crowdin-SourceKey: msgstr\n"
 "Language: zh-Hans\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as SOL, USDC, Apple Pay, Google Pay, USD, and EUR.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.buy-description"
-msgstr "通过 {applePay}、{googlePay}、信用卡，使用 {USD}、{EUR} 等本地货币购买 {SOL} 或 {USDC}"
+msgstr "通过 {applePay}、{googlePay} 和信用卡，使用 {USD}、{EUR} 等本地货币购买 {SOL} 或 {USDC}"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.buy-title"
-msgstr "用本地货币购买加密货币"
+msgstr "使用本地货币购买加密货币"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as Coinbase, Binance, and Solana.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.cex-description"
-msgstr "将您在 {coinbase} 或 {binance} 等交易所的加密资产直接转入您的 {solana} 钱包"
+msgstr "将您的加密资金从 {coinbase}、{binance} 等交易所直接转入您的 {solana} 钱包"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.cex-title"
 msgstr "从交易所转入资金"
 
 #. Onboard section heading captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.more-ways"
 msgstr "更多充值方式"
 
 #. Onboard page subtitle captured from the pinned Jupiter baseline. The protected placeholder renders as Solana.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.subtitle"
-msgstr "在 {solana} 上入门的最简单方式"
+msgstr "开始使用 {solana} 的便捷方式"
 
 #. Onboard page title captured from the pinned Jupiter baseline. The protected placeholder renders as Jupiter.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.title"
 msgstr "通过 {jupiter} 充值"
 
 #. Primary action that opens the fixed swap review in the translation sandbox.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.swap.review"
-msgstr "核对兑换详情"
+msgstr "查看兑换"
 
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "pilot.recording.proof"
-msgstr "翻译排练完成"
+msgstr ""
 
 #. Sandbox-only empty state shown without a network request.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.onboard.unavailable"
-msgstr "此预览版暂无可用的充值方式。"
+msgstr "此预览中没有可用的充值方式。"
 
 #. Sandbox-only ICU select. Preserve the walletState variable.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.onboard.wallet-state"
 msgstr "{walletState, select, new {设置您的第一个钱包} funded {向您的钱包充值} other {查看您的钱包}}"
 
 #. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.swap.market-count"
-msgstr "{routeCount, plural, one {此路由使用 # 个市场} other {此路由使用 # 个市场}}。"
+msgstr "{routeCount, plural, other {此路线使用 # 个市场。}}"
 
 #. Sandbox-only guidance. Preserve the link rich-text placeholder.
-#: src/components/SwapExample.tsx:
+#: src/components/SwapExample.tsx
 msgid "sandbox.translation.guide"
-msgstr "编辑占位符前请先阅读<link>翻译指南</link>。"
+msgstr "编辑占位符前，请阅读<link>翻译指南</link>。"
