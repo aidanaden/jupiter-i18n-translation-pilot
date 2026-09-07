@@ -45,7 +45,7 @@ msgstr "通过 {jupiter} 充值"
 #. Primary action that opens the fixed swap review in the translation sandbox.
 #: src/i18n/messages.ts:
 msgid "baseline.swap.review"
-msgstr "查看兑换详情"
+msgstr "核对兑换详情"
 
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
 #: src/i18n/messages.ts:
