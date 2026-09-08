@@ -1,0 +1,85 @@
+name: crowdin-ai-delivery
+
+on:
+  pull_request_target:
+    branches:
+      - aidan/provider-e2e-crowdin-ai-base
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pending:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'aidan/provider-e2e-crowdin-ai-base' && startsWith(github.event.pull_request.head.ref, 'aidan/crowdin-ai-candidate-') && !github.event.pull_request.draft
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/provider-e2e/crowdin-ai-delivery-status.mjs pending
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  crowdin-ai-delivery:
+    needs: pending
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'aidan/provider-e2e-crowdin-ai-base' && startsWith(github.event.pull_request.head.ref, 'aidan/crowdin-ai-candidate-') && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Read current isolated Crowdin records
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_AI_RECORDING_TOKEN }}
+        run: node scripts/provider-e2e/crowdin-ai-native-read.mjs "$RUNNER_TEMP/crowdin-ai-delivery-native"
+      - name: Verify exact PR catalog and native approvals
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/provider-e2e/crowdin-ai-delivery.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crowdin-ai-delivery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crowdin-ai-delivery-receipt.json
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-status:
+    if: always() && github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'aidan/provider-e2e-crowdin-ai-base' && startsWith(github.event.pull_request.head.ref, 'aidan/crowdin-ai-candidate-') && !github.event.pull_request.draft
+    needs: [pending, crowdin-ai-delivery]
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/provider-e2e/crowdin-ai-delivery-status.mjs complete
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFY_RESULT: ${{ needs.crowdin-ai-delivery.result }}
+          PENDING_RESULT: ${{ needs.pending.result }}
