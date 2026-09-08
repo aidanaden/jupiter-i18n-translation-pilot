@@ -1,0 +1,442 @@
+{
+  "format": "crowdin-pre-review-capture-v1",
+  "capturedAt": "2026-09-08T23:53:23.302Z",
+  "reviewerUserId": 17853021,
+  "reviewerDisclosure": "Automated test reviewer. No human language review.",
+  "sourceHash": "d04afe258a31159ff49d6f289142f0601fea4b5cf10bce21661eb008f945679e",
+  "preReviewSnapshot": {
+    "format": "crowdin-native-read-snapshot-v1",
+    "scope": {
+      "repository": "aidanaden/jupiter-i18n-translation-pilot",
+      "projectId": 927431,
+      "projectSlug": "crowdin-ai-recording-02",
+      "fileId": 14,
+      "sourceRevision": 1,
+      "languageId": "zh-CN"
+    },
+    "startedAt": "2026-09-08T23:52:25.363Z",
+    "completedAt": "2026-09-08T23:52:26.817Z",
+    "atomicSnapshot": false,
+    "approvalTimeContentProved": false,
+    "humanApprovalProved": false,
+    "deliveryAuthorized": false,
+    "project": {
+      "id": 927431,
+      "identifier": "crowdin-ai-recording-02",
+      "sourceLanguageId": "en",
+      "targetLanguageIds": ["zh-CN"],
+      "visibility": "private"
+    },
+    "file": {
+      "id": 14,
+      "projectId": 927431,
+      "name": "messages.po",
+      "revisionId": 1,
+      "branchId": null,
+      "directoryId": null
+    },
+    "strings": [
+      {
+        "id": 52,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.buy-description",
+        "text": "Purchase {SOL} or {USDC} via {applePay}, {googlePay}, credit cards with your local currencies like {USD}, {EUR}",
+        "context": "#. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as SOL, USDC, Apple Pay, Google Pay, USD, and EUR.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.buy-description",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 54,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.buy-title",
+        "text": "Buy crypto with local currencies",
+        "context": "#. Onboard method title captured from the pinned Jupiter baseline.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.buy-title",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 56,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.cex-description",
+        "text": "Transfer your crypto funds from exchanges like {coinbase} or {binance} to your {solana} wallet directly",
+        "context": "#. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as Coinbase, Binance, and Solana.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.cex-description",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 58,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.cex-title",
+        "text": "Transfer funds from Exchanges",
+        "context": "#. Onboard method title captured from the pinned Jupiter baseline.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.cex-title",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 60,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.more-ways",
+        "text": "More ways to deposit",
+        "context": "#. Onboard section heading captured from the pinned Jupiter baseline.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.more-ways",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 62,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.subtitle",
+        "text": "The easiest way to get started on {solana}",
+        "context": "#. Onboard page subtitle captured from the pinned Jupiter baseline. The protected placeholder renders as Solana.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.subtitle",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 64,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.onboard.title",
+        "text": "Deposit via {jupiter}",
+        "context": "#. Onboard page title captured from the pinned Jupiter baseline. The protected placeholder renders as Jupiter.\n#: src/i18n/messages.ts\n\nmsgid: baseline.onboard.title",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 66,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "baseline.swap.review",
+        "text": "Review swap",
+        "context": "#. Primary action that opens the fixed swap review in the translation sandbox.\n#: src/i18n/messages.ts\n\nmsgid: baseline.swap.review",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 68,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "pilot.recording.proof",
+        "text": "Translation rehearsal complete",
+        "context": "#. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.\n#: src/i18n/messages.ts\n\nmsgid: pilot.recording.proof",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 70,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "sandbox.onboard.unavailable",
+        "text": "No deposit methods are available in this preview.",
+        "context": "#. Sandbox-only empty state shown without a network request.\n#: src/i18n/messages.ts\n\nmsgid: sandbox.onboard.unavailable",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 72,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "sandbox.onboard.wallet-state",
+        "text": "{walletState, select, new {Set up your first wallet} funded {Add funds to your wallet} other {Review your wallet}}",
+        "context": "#. Sandbox-only ICU select. Preserve the walletState variable.\n#: src/i18n/messages.ts\n\nmsgid: sandbox.onboard.wallet-state",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 74,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "sandbox.swap.market-count",
+        "text": "{routeCount, plural, one {This route uses # market} other {This route uses # markets}}.",
+        "context": "#. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.\n#: src/i18n/messages.ts\n\nmsgid: sandbox.swap.market-count",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      },
+      {
+        "id": 76,
+        "projectId": 927431,
+        "fileId": 14,
+        "identifier": "sandbox.translation.guide",
+        "text": "Read the <link>translation guide</link> before editing placeholders.",
+        "context": "#. Sandbox-only guidance. Preserve the link rich-text placeholder.\n#: src/components/SwapExample.tsx\n\nmsgid: sandbox.translation.guide",
+        "revision": 1,
+        "createdAt": "2026-09-08T18:44:54+00:00",
+        "updatedAt": null
+      }
+    ],
+    "translations": [
+      {
+        "stringId": 52,
+        "contentType": "text/plain",
+        "translationId": 84,
+        "text": "使用 {applePay}、{googlePay} 或信用卡，以 {USD}、{EUR} 等当地货币购买 {SOL} 或 {USDC}",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:51:07+00:00"
+      },
+      {
+        "stringId": 54,
+        "contentType": "text/plain",
+        "translationId": 60,
+        "text": "用本地货币购买加密货币",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 56,
+        "contentType": "text/plain",
+        "translationId": 62,
+        "text": "直接从 {coinbase} 或 {binance} 等交易所将您的加密资金转移到 {solana} 钱包",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 58,
+        "contentType": "text/plain",
+        "translationId": 64,
+        "text": "从交易所转入资金",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 60,
+        "contentType": "text/plain",
+        "translationId": 66,
+        "text": "更多存入方式",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 62,
+        "contentType": "text/plain",
+        "translationId": 68,
+        "text": "在 {solana} 上开始使用的最简单方式",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 64,
+        "contentType": "text/plain",
+        "translationId": 70,
+        "text": "通过 {jupiter} 存入",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 66,
+        "contentType": "text/plain",
+        "translationId": 86,
+        "text": "检查兑换",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:52:00+00:00"
+      },
+      {
+        "stringId": 68,
+        "contentType": "text/plain",
+        "translationId": 74,
+        "text": "翻译排练完成",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 70,
+        "contentType": "text/plain",
+        "translationId": 76,
+        "text": "此预览中没有可用的存入方式。",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 72,
+        "contentType": "application/vnd.crowdin.text+icu",
+        "translationId": 78,
+        "text": "{walletState, select, new {设置您的第一个钱包} funded {向您的钱包添加资金} other {查看您的钱包}}",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 74,
+        "contentType": "application/vnd.crowdin.text+icu",
+        "translationId": 80,
+        "text": "{routeCount, plural, other {此路线使用 # 个市场}}。",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      },
+      {
+        "stringId": 76,
+        "contentType": "text/plain",
+        "translationId": 82,
+        "text": "编辑占位符前请阅读 <link>翻译指南</link>。",
+        "userId": 17853021,
+        "createdAt": "2026-09-08T23:44:37+00:00"
+      }
+    ],
+    "approvals": [],
+    "requests": [
+      {
+        "path": "/projects/927431",
+        "receivedAt": "2026-09-08T23:52:25.878Z"
+      },
+      {
+        "path": "/projects/927431/files/14",
+        "receivedAt": "2026-09-08T23:52:26.057Z"
+      },
+      {
+        "path": "/projects/927431/strings?fileId=14&limit=100&offset=0",
+        "receivedAt": "2026-09-08T23:52:26.281Z"
+      },
+      {
+        "path": "/projects/927431/languages/zh-CN/translations?fileId=14&limit=100&offset=0",
+        "receivedAt": "2026-09-08T23:52:26.479Z"
+      },
+      {
+        "path": "/projects/927431/approvals?languageId=zh-CN&fileId=14&limit=100&offset=0",
+        "receivedAt": "2026-09-08T23:52:26.641Z"
+      },
+      {
+        "path": "/projects/927431/files/14",
+        "receivedAt": "2026-09-08T23:52:26.817Z"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "messageId": "baseline.onboard.buy-description",
+      "stringId": 52,
+      "sourceText": "Purchase {SOL} or {USDC} via {applePay}, {googlePay}, credit cards with your local currencies like {USD}, {EUR}",
+      "sourceRevision": 1,
+      "translationId": 84,
+      "translationHash": "49d43761eeaf11ff63608bfec0b44c4e8d406baa6ff5688f403cde0e502bdc35",
+      "translationText": "使用 {applePay}、{googlePay} 或信用卡，以 {USD}、{EUR} 等当地货币购买 {SOL} 或 {USDC}"
+    },
+    {
+      "messageId": "baseline.onboard.buy-title",
+      "stringId": 54,
+      "sourceText": "Buy crypto with local currencies",
+      "sourceRevision": 1,
+      "translationId": 60,
+      "translationHash": "05d80a5238757a937436abd0a848a7ff917d1c56ec435e7e0261bec89e72e25e",
+      "translationText": "用本地货币购买加密货币"
+    },
+    {
+      "messageId": "baseline.onboard.cex-description",
+      "stringId": 56,
+      "sourceText": "Transfer your crypto funds from exchanges like {coinbase} or {binance} to your {solana} wallet directly",
+      "sourceRevision": 1,
+      "translationId": 62,
+      "translationHash": "d18365c22895e1eeebc8722d3e826e775f2db45ccb0b2b33ae549cc8b9e6ee50",
+      "translationText": "直接从 {coinbase} 或 {binance} 等交易所将您的加密资金转移到 {solana} 钱包"
+    },
+    {
+      "messageId": "baseline.onboard.cex-title",
+      "stringId": 58,
+      "sourceText": "Transfer funds from Exchanges",
+      "sourceRevision": 1,
+      "translationId": 64,
+      "translationHash": "cec93e0d7e653b4009f876aa7c2456e38e4c0eb3e7c3d1438455ec4e239f7609",
+      "translationText": "从交易所转入资金"
+    },
+    {
+      "messageId": "baseline.onboard.more-ways",
+      "stringId": 60,
+      "sourceText": "More ways to deposit",
+      "sourceRevision": 1,
+      "translationId": 66,
+      "translationHash": "5412678880b78df75b075a2eaf6ce168c4eee05b7f7f5900265b0dd441aa0ad0",
+      "translationText": "更多存入方式"
+    },
+    {
+      "messageId": "baseline.onboard.subtitle",
+      "stringId": 62,
+      "sourceText": "The easiest way to get started on {solana}",
+      "sourceRevision": 1,
+      "translationId": 68,
+      "translationHash": "2f89918fdfb4ead36512b4759b61be882dc19b5317dcd27665a4fea2602cd457",
+      "translationText": "在 {solana} 上开始使用的最简单方式"
+    },
+    {
+      "messageId": "baseline.onboard.title",
+      "stringId": 64,
+      "sourceText": "Deposit via {jupiter}",
+      "sourceRevision": 1,
+      "translationId": 70,
+      "translationHash": "a359ef48103d33b38de2212fcd3782986eb7bb893f80f572300b5109fa8f9f06",
+      "translationText": "通过 {jupiter} 存入"
+    },
+    {
+      "messageId": "baseline.swap.review",
+      "stringId": 66,
+      "sourceText": "Review swap",
+      "sourceRevision": 1,
+      "translationId": 86,
+      "translationHash": "a8a0cac2f30bf43c82bb14caacd65e19a27eb279fd332eba6e4c3b9c6b175174",
+      "translationText": "检查兑换"
+    },
+    {
+      "messageId": "pilot.recording.proof",
+      "stringId": 68,
+      "sourceText": "Translation rehearsal complete",
+      "sourceRevision": 1,
+      "translationId": 74,
+      "translationHash": "9e700aa820b30ee9b9f43d5779e9668a854d355bc75445b14e25201a938d3f07",
+      "translationText": "翻译排练完成"
+    },
+    {
+      "messageId": "sandbox.onboard.unavailable",
+      "stringId": 70,
+      "sourceText": "No deposit methods are available in this preview.",
+      "sourceRevision": 1,
+      "translationId": 76,
+      "translationHash": "7bd76a7994b15cd5fe4c50666c253d18e717eea498ffe6d8aacba2a6187447be",
+      "translationText": "此预览中没有可用的存入方式。"
+    },
+    {
+      "messageId": "sandbox.onboard.wallet-state",
+      "stringId": 72,
+      "sourceText": "{walletState, select, new {Set up your first wallet} funded {Add funds to your wallet} other {Review your wallet}}",
+      "sourceRevision": 1,
+      "translationId": 78,
+      "translationHash": "57cf8800ddbd7d8f3dfb0dc78bb68727f6bd8e0022df4c09c5e4a060e9720a48",
+      "translationText": "{walletState, select, new {设置您的第一个钱包} funded {向您的钱包添加资金} other {查看您的钱包}}"
+    },
+    {
+      "messageId": "sandbox.swap.market-count",
+      "stringId": 74,
+      "sourceText": "{routeCount, plural, one {This route uses # market} other {This route uses # markets}}.",
+      "sourceRevision": 1,
+      "translationId": 80,
+      "translationHash": "09207ad21d32f94cc8137ea470335dbdc7f67ecf696637f048573d1fd877a4bc",
+      "translationText": "{routeCount, plural, other {此路线使用 # 个市场}}。"
+    },
+    {
+      "messageId": "sandbox.translation.guide",
+      "stringId": 76,
+      "sourceText": "Read the <link>translation guide</link> before editing placeholders.",
+      "sourceRevision": 1,
+      "translationId": 82,
+      "translationHash": "bcb100246d02845a6eccf1da5e29a0fe5771d2ed294ef9ca7e88b0d897fcd926",
+      "translationText": "编辑占位符前请阅读 <link>翻译指南</link>。"
+    }
+  ],
+  "atomicSnapshot": false,
+  "approvalTimeContentProved": false,
+  "humanApprovalProved": false,
+  "liveStateProved": false,
+  "deliveryAllowed": false,
+  "digest": "e54770e8e3a82963ca6cf340d304e58ba5c5ae6dcdd08d2c9e8230c5b718f794"
+}
