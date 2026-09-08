@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run i18n:compile && vite build && oxfmt src/routeTree.gen.ts",
+    "build:crowdin-ai-e2e": "pnpm run i18n:compile && vite build --mode crowdin-ai-e2e && oxfmt src/routeTree.gen.ts",
     "build:lingo-e2e": "pnpm run i18n:compile && vite build --mode lingo-e2e && oxfmt src/routeTree.gen.ts",
     "cf-typegen": "wrangler types",
     "deploy": "pnpm run build && wrangler deploy --config dist/server/wrangler.json",
     "deploy:dry-run": "pnpm run build && wrangler deploy --dry-run --config dist/server/wrangler.json --outdir .wrangler/dry-run",
     "verify:lingo-e2e:dry-run": "pnpm run build:lingo-e2e && wrangler deploy --dry-run --config dist-lingo-e2e/server/wrangler.json --outdir .wrangler/lingo-e2e-dry-run",
+    "verify:crowdin-ai-e2e:dry-run": "pnpm run build:crowdin-ai-e2e && wrangler deploy --dry-run --config dist-crowdin-ai-e2e/server/wrangler.json --outdir .wrangler/crowdin-ai-e2e-dry-run",
     "verify:ssr:lingo-e2e": "pnpm run build:lingo-e2e && node scripts/verify-ssr.mjs --lingo-e2e && oxfmt src/routeTree.gen.ts",
     "dev": "vite dev",
     "format:check": "oxfmt --check",

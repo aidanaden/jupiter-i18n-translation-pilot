@@ -24,14 +24,24 @@ const catalogTimestamp = readGit(
 );
 
 export default defineConfig(({ mode }) => ({
-  build: mode === "lingo-e2e" ? { outDir: "dist-lingo-e2e" } : undefined,
+  build:
+    mode === "crowdin-ai-e2e"
+      ? { outDir: "dist-crowdin-ai-e2e" }
+      : mode === "lingo-e2e"
+        ? { outDir: "dist-lingo-e2e" }
+        : undefined,
   define: {
     __CATALOG_TIMESTAMP__: JSON.stringify(catalogTimestamp),
     __DEPLOYED_COMMIT__: JSON.stringify(deployedCommit.slice(0, 12)),
   },
   plugins: [
     cloudflare({
-      configPath: mode === "lingo-e2e" ? "wrangler.lingo-e2e.jsonc" : "wrangler.jsonc",
+      configPath:
+        mode === "crowdin-ai-e2e"
+          ? "wrangler.crowdin-ai-e2e.jsonc"
+          : mode === "lingo-e2e"
+            ? "wrangler.lingo-e2e.jsonc"
+            : "wrangler.jsonc",
       viteEnvironment: { name: "ssr" },
     }),
     tanstackStart({

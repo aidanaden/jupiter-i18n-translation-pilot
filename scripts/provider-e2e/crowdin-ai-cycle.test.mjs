@@ -1,5 +1,9 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { formatter } from "@lingui/format-po";
 import { expect, it, vi } from "vitest";
@@ -139,6 +143,67 @@ const acceptedInput = {
   expectedAcceptedHead: acceptedHead,
   current: acceptedCurrent,
 };
+
+const resetInput = {
+  before: acceptedInput,
+  resetHead: "3".repeat(40),
+  current: { ...baseline.current, head: "3".repeat(40) },
+};
+
+it.each([
+  ["baseline", baselineInput, baseline],
+  ["stage", stageInput, candidate],
+  ["accept", acceptInput, accepted],
+  [
+    "repeat",
+    { ...acceptedInput, evidence, exportedPo },
+    planCrowdinAiRepeatExport({ ...acceptedInput, evidence, exportedPo }),
+  ],
+  ["reset-plan", acceptedInput, planCrowdinAiReset(acceptedInput)],
+  ["verify-reset", resetInput, verifyCrowdinAiReset(resetInput)],
+])("runs %s from an explicit JSON file without writing to it", (command, input, expected) => {
+  const directory = mkdtempSync(join(tmpdir(), "crowdin-ai-cli-test-"));
+  try {
+    const inputPath = join(directory, "input.json");
+    const bytes = JSON.stringify(input);
+    writeFileSync(inputPath, bytes);
+    const result = spawnSync(
+      process.execPath,
+      [fileURLToPath(new URL("./crowdin-ai-cycle-cli.mjs", import.meta.url)), command, inputPath],
+      { encoding: "utf8", cwd: directory },
+    );
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(JSON.parse(result.stdout)).toEqual(expected);
+    expect(readFileSync(inputPath, "utf8")).toBe(bytes);
+    expect(readdirSync(directory)).toEqual(["input.json"]);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+it("exits without a candidate artifact when the CLI receives an unapproved batch", () => {
+  const directory = mkdtempSync(join(tmpdir(), "crowdin-ai-cli-reject-"));
+  try {
+    const inputPath = join(directory, "input.json");
+    const input = structuredClone(stageInput);
+    delete input.evidence.entries[0].approvalId;
+    const bytes = JSON.stringify(input);
+    writeFileSync(inputPath, bytes);
+    const result = spawnSync(
+      process.execPath,
+      [fileURLToPath(new URL("./crowdin-ai-cycle-cli.mjs", import.meta.url)), "stage", inputPath],
+      { encoding: "utf8", cwd: directory },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("approvalId");
+    expect(readFileSync(inputPath, "utf8")).toBe(bytes);
+    expect(readdirSync(directory)).toEqual(["input.json"]);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 it("moves the exact 13-message batch through candidate, accepted, repeat no-op and exact reset", () => {
   expect(baseline.phase).toBe("baseline");
