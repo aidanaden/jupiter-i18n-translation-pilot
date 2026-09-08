@@ -23,7 +23,7 @@ jobs:
           node-version: 22
       - name: Read isolated native records
         env:
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_AI_RECORDING_TOKEN }}
         run: node scripts/provider-e2e/crowdin-ai-native-read.mjs "$RUNNER_TEMP/crowdin-ai-native-evidence"
       - uses: actions/upload-artifact@v4
         with:
