@@ -171,6 +171,60 @@ describe("native Crowdin read", () => {
     expect(() => selectApproval({ ...approval, languageId: "ja" })).toThrow("language");
   });
 
+  it.each([
+    ["source.createdAt", () => selectString({ ...source(1), createdAt: undefined }), "undefined"],
+    ["source.updatedAt", () => selectString({ ...source(1), updatedAt: null }), "null"],
+    [
+      "translation.createdAt",
+      () => selectTranslation({ ...translation(), createdAt: "private-invalid-value" }),
+      "string",
+    ],
+    [
+      "translation.plurals[].createdAt",
+      () =>
+        selectTranslation({
+          stringId: 1,
+          contentType: "plural",
+          plurals: [{ ...translation(), pluralForm: "other", createdAt: [] }],
+        }),
+      "array",
+    ],
+    [
+      "approval.createdAt",
+      () => selectApproval({ ...approval, createdAt: undefined }),
+      "undefined",
+    ],
+    ["approval.createdAt", () => selectApproval({ ...approval, createdAt: null }), "null"],
+    [
+      "approval.createdAt",
+      () => selectApproval({ ...approval, createdAt: { private: "value" } }),
+      "object",
+    ],
+  ])("identifies rejected date field %s without its value", (field, select, type) => {
+    let failure;
+    try {
+      select();
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(Error);
+    expect(safeFailureMessage(failure)).toBe(
+      `Crowdin native read failed: Invalid native date at ${field} (type: ${type}).`,
+    );
+  });
+
+  it.each([
+    [0, "snapshot.startedAt"],
+    [1, "request.receivedAt"],
+    [7, "snapshot.completedAt"],
+  ])("identifies clock date failure on call %i", async (failureCall, field) => {
+    let call = 0;
+    const now = () => (call++ === failureCall ? "private-invalid-clock" : date);
+    await expect(
+      collectNativeSnapshot({ token: "test-not-a-secret", ...mockApi(), now }),
+    ).rejects.toThrow(`Invalid native date at ${field} (type: string).`);
+  });
+
   it("preserves plural native IDs and sanitizes nested users", () => {
     const value = selectTranslation({
       stringId: 1,

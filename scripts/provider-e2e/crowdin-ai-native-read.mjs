@@ -38,10 +38,11 @@ function stringValue(value) {
   return value;
 }
 
-function dateValue(value) {
+function dateValue(value, field) {
+  const type = value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
   requireValue(
     typeof value === "string" && Number.isFinite(Date.parse(value)),
-    "Invalid native date.",
+    `Invalid native date at ${field} (type: ${type}).`,
   );
   return value;
 }
@@ -102,17 +103,17 @@ export function selectString(data) {
     text: stringValue(data.text),
     context: stringValue(data.context),
     revision: positiveId(data.revision),
-    createdAt: dateValue(data.createdAt),
-    updatedAt: dateValue(data.updatedAt),
+    createdAt: dateValue(data.createdAt, "source.createdAt"),
+    updatedAt: dateValue(data.updatedAt, "source.updatedAt"),
   };
 }
 
-function selectTranslationValue(data) {
+function selectTranslationValue(data, dateField) {
   return {
     translationId: positiveId(data.translationId),
     text: stringValue(data.text),
     userId: positiveId(data.user?.id),
-    createdAt: dateValue(data.createdAt),
+    createdAt: dateValue(data.createdAt, dateField),
   };
 }
 
@@ -127,7 +128,7 @@ export function selectTranslation(data) {
       "Invalid native plural count.",
     );
     const plurals = data.plurals.map((plural) => ({
-      ...selectTranslationValue(plural),
+      ...selectTranslationValue(plural, "translation.plurals[].createdAt"),
       pluralForm: stringValue(plural.pluralForm),
     }));
     requireValue(
@@ -136,7 +137,7 @@ export function selectTranslation(data) {
     );
     return { ...result, plurals };
   }
-  return { ...result, ...selectTranslationValue(data) };
+  return { ...result, ...selectTranslationValue(data, "translation.createdAt") };
 }
 
 export function selectApproval(data) {
@@ -147,7 +148,7 @@ export function selectApproval(data) {
     stringId: positiveId(data.stringId),
     languageId: data.languageId,
     userId: positiveId(data.user?.id),
-    createdAt: dateValue(data.createdAt),
+    createdAt: dateValue(data.createdAt, "approval.createdAt"),
   };
 }
 
@@ -160,7 +161,7 @@ export async function collectNativeSnapshot({
     typeof token === "string" && token.trim().length > 0 && !/[\r\n]/u.test(token),
     "Crowdin token is missing or invalid.",
   );
-  const startedAt = dateValue(now());
+  const startedAt = dateValue(now(), "snapshot.startedAt");
   const requests = [];
   async function get(path) {
     let response;
@@ -200,7 +201,7 @@ export async function collectNativeSnapshot({
     } catch {
       throw new NativeReadError(`Crowdin response was not valid bounded JSON at ${path}.`);
     }
-    requests.push({ path, receivedAt: dateValue(now()) });
+    requests.push({ path, receivedAt: dateValue(now(), "request.receivedAt") });
     return body;
   }
   async function list(path, select, key) {
@@ -261,7 +262,7 @@ export async function collectNativeSnapshot({
     format: "crowdin-native-read-snapshot-v1",
     scope: nativeScope,
     startedAt,
-    completedAt: dateValue(now()),
+    completedAt: dateValue(now(), "snapshot.completedAt"),
     atomicSnapshot: false,
     approvalTimeContentProved: false,
     humanApprovalProved: false,
