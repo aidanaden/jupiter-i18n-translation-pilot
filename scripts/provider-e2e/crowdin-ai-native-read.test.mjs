@@ -173,7 +173,13 @@ describe("native Crowdin read", () => {
 
   it.each([
     ["source.createdAt", () => selectString({ ...source(1), createdAt: undefined }), "undefined"],
-    ["source.updatedAt", () => selectString({ ...source(1), updatedAt: null }), "null"],
+    ["source.updatedAt", () => selectString({ ...source(1), updatedAt: undefined }), "undefined"],
+    [
+      "source.updatedAt",
+      () => selectString({ ...source(1), updatedAt: "private-invalid-value" }),
+      "string",
+    ],
+    ["source.updatedAt", () => selectString({ ...source(1), updatedAt: 0 }), "number"],
     [
       "translation.createdAt",
       () => selectTranslation({ ...translation(), createdAt: "private-invalid-value" }),
@@ -223,6 +229,24 @@ describe("native Crowdin read", () => {
     await expect(
       collectNativeSnapshot({ token: "test-not-a-secret", ...mockApi(), now }),
     ).rejects.toThrow(`Invalid native date at ${field} (type: string).`);
+  });
+
+  it("preserves the explicit null source updatedAt observed in the native API", async () => {
+    const strings = Array.from({ length: 13 }, (_, i) => ({ ...source(i + 1), updatedAt: null }));
+    expect(selectString(strings[0]).updatedAt).toBeNull();
+    const snapshot = await collect({ "/strings": page(strings) });
+    expect(snapshot.strings.every((item) => item.updatedAt === null)).toBe(true);
+    expect(snapshot.approvalTimeContentProved).toBe(false);
+    expect(snapshot.humanApprovalProved).toBe(false);
+  });
+
+  it("still rejects explicit null creation dates for sources and translations", () => {
+    expect(() => selectString({ ...source(1), createdAt: null })).toThrow(
+      "source.createdAt (type: null)",
+    );
+    expect(() => selectTranslation({ ...translation(), createdAt: null })).toThrow(
+      "translation.createdAt (type: null)",
+    );
   });
 
   it("preserves plural native IDs and sanitizes nested users", () => {

@@ -104,7 +104,7 @@ export function selectString(data) {
     context: stringValue(data.context),
     revision: positiveId(data.revision),
     createdAt: dateValue(data.createdAt, "source.createdAt"),
-    updatedAt: dateValue(data.updatedAt, "source.updatedAt"),
+    updatedAt: data.updatedAt === null ? null : dateValue(data.updatedAt, "source.updatedAt"),
   };
 }
 
