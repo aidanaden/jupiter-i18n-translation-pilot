@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { expect, it } from "vitest";
 import { parse } from "yaml";
 
-it("isolates only Lingo base PR checks and retains common and Crowdin verification", async () => {
+it("isolates both provider bases and retains shared and original Crowdin verification", async () => {
   const workflow = parse(
     await readFile(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"),
   );
@@ -18,6 +18,13 @@ it("isolates only Lingo base PR checks and retains common and Crowdin verificati
       "github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-lingo-base'",
     );
   }
+  const crowdinAi = steps.filter((step) =>
+    step.if?.includes("== 'aidan/provider-e2e-crowdin-ai-base'"),
+  );
+  expect(crowdinAi.map((step) => step.run)).toEqual(["pnpm run build"]);
+  expect(crowdinAi[0].if).toBe(
+    "github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-crowdin-ai-base'",
+  );
   const legacy = steps.filter((step) => step.if?.includes("!= 'aidan/provider-e2e-lingo-base'"));
   expect(legacy.map((step) => step.run)).toEqual([
     "pnpm run verify:ssr",
@@ -28,7 +35,7 @@ it("isolates only Lingo base PR checks and retains common and Crowdin verificati
   ]);
   for (const step of legacy) {
     expect(step.if).toBe(
-      "github.event_name != 'pull_request' || github.base_ref != 'aidan/provider-e2e-lingo-base'",
+      "github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')",
     );
   }
   const shared = steps.filter((step) => !step.if).map((step) => step.run);
@@ -44,4 +51,5 @@ it("isolates only Lingo base PR checks and retains common and Crowdin verificati
   );
   expect(shared.some((command) => command?.startsWith("git diff --exit-code -- ."))).toBe(true);
   expect(steps.some((step) => step["continue-on-error"])).toBe(false);
+  expect(workflow.on).toEqual({ pull_request: null, push: { branches: ["main"] } });
 });
