@@ -22,17 +22,17 @@ const tree = (ref, oid) => ({
 });
 const taskSha = "a".repeat(40);
 const pr = {
-  number: 31,
+  number: 33,
   state: "open",
   draft: false,
   head: {
-    ref: "aidan/crowdin-auto-source-20260910",
-    sha: "3fe66063f3847cddf598050d403e9549131b540a",
+    ref: "aidan/crowdin-ai-visible-source-20260910",
+    sha: "1abaf338ff8dd129c2abb4c14ff7a9bc26bcba05",
     repo: { full_name: sourceScope.repository },
   },
   base: {
     ref: "aidan/provider-e2e-crowdin-ai-base",
-    sha: "9189ff3e87692ba0054618dee61ef6c10aa4349b",
+    sha: "dea6d47fba3d33d876ecb7dad763fe76385c102e",
     repo: { full_name: sourceScope.repository },
   },
 };
@@ -47,8 +47,8 @@ const input = {
   },
   trustedHead: taskSha,
   pr,
-  baseTree: tree(sourceScope.baseSha, "fcedf9fc2846731c695a2ebf1eec51e5d953d140"),
-  headTree: tree(sourceScope.headSha, "2455c1a649bd10697c920c293c8f5436cc110344"),
+  baseTree: tree(sourceScope.baseSha, "9359fcb997f739f855f6f7b698d61af64e644ac6"),
+  headTree: tree(sourceScope.headSha, "e6b6804ccb711d0cb85668b3d2b6574e4d244582"),
   blobs: sourceScope.files.map((file) => ({
     sha: file.blob,
     size: file.size,
@@ -56,43 +56,43 @@ const input = {
     content: Buffer.from(git("show", `${sourceScope.headSha}:${file.path}`)).toString("base64"),
   })),
   run: {
-    id: 34399473578,
+    id: 34416174286,
     run_attempt: 1,
     head_sha: sourceScope.headSha,
     event: "pull_request",
-    head_branch: "aidan/crowdin-auto-source-20260910",
+    head_branch: "aidan/crowdin-ai-visible-source-20260910",
     status: "completed",
     conclusion: "success",
     path: ".github/workflows/ci.yml",
-    check_suite_id: 93190882384,
+    check_suite_id: 93235775352,
   },
   job: {
-    id: 102627469391,
-    run_id: 34399473578,
+    id: 102681433563,
+    run_id: 34416174286,
     head_sha: sourceScope.headSha,
     name: "verify",
     status: "completed",
     conclusion: "success",
-    check_run_url: `https://api.github.com/repos/${sourceScope.repository}/check-runs/102627469391`,
+    check_run_url: `https://api.github.com/repos/${sourceScope.repository}/check-runs/102681433563`,
   },
   check: {
-    id: 102627469391,
+    id: 102681433563,
     head_sha: sourceScope.headSha,
     name: "verify",
     status: "completed",
     conclusion: "success",
     app: { id: 15368 },
-    check_suite: { id: 93190882384 },
+    check_suite: { id: 93235775352 },
   },
 };
 
-it("allows only the exact approved eight-file PR31 source update", () => {
+it("allows only the exact approved five-file PR33 source update", () => {
   expect(verifySourceCheck(input)).toMatchObject({
     path: `/repos/${sourceScope.repository}/statuses/${sourceScope.headSha}`,
     body: {
       state: "success",
       context: "crowdin-ai-delivery",
-      description: "Verified PR31 source update; not translation approval",
+      description: "Verified PR33 source update; not translation approval",
     },
   });
   expect(Object.isFrozen(sourceScope.files[0])).toBe(true);
@@ -357,7 +357,9 @@ it("limits the source-check workflow to trusted task pushes", () => {
       "utf8",
     ),
   );
-  expect(flow.on).toEqual({ push: { branches: ["aidan/crowdin-auto-source-check-20260910"] } });
+  expect(flow.on).toEqual({
+    push: { branches: ["aidan/crowdin-ai-visible-source-check-20260910"] },
+  });
   expect(flow.permissions).toEqual({
     contents: "read",
     "pull-requests": "read",
@@ -366,7 +368,7 @@ it("limits the source-check workflow to trusted task pushes", () => {
     statuses: "write",
   });
   expect(flow.jobs["source-safety"].if).toBe(
-    "github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-auto-source-check-20260910'",
+    "github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-ai-visible-source-check-20260910'",
   );
   expect(flow.jobs["source-safety"]["timeout-minutes"]).toBe(5);
   expect(flow.jobs["source-safety"].steps).toEqual([
@@ -390,7 +392,7 @@ function runtime(change = () => {}) {
   const fetchImpl = vi.fn(async (url, options) => {
     if (options.method === "POST") return new Response("{}", { status: 201 });
     let value;
-    if (url.endsWith("/pulls/31")) {
+    if (url.endsWith("/pulls/33")) {
       prReads += 1;
       value = prReads > 1 ? (data.lastPr ?? data.pr) : data.pr;
     } else if (url.includes(`/trees/${sourceScope.baseTree}?`)) value = data.baseTree;
@@ -424,13 +426,13 @@ it("posts once after the second exact PR read", async () => {
   await runSourceCheck(test);
   const calls = test.fetchImpl.mock.calls;
   expect(calls.filter(([, options]) => options.method === "POST")).toHaveLength(1);
-  expect(calls.filter(([url]) => url.endsWith("/pulls/31"))).toHaveLength(2);
-  expect(calls.at(-2)[0]).toBe(`https://api.github.com/repos/${sourceScope.repository}/pulls/31`);
+  expect(calls.filter(([url]) => url.endsWith("/pulls/33"))).toHaveLength(2);
+  expect(calls.at(-2)[0]).toBe(`https://api.github.com/repos/${sourceScope.repository}/pulls/33`);
   expect(calls.at(-1)[0]).toBe(
     `https://api.github.com/repos/${sourceScope.repository}/statuses/${sourceScope.headSha}`,
   );
   expect(JSON.parse(calls.at(-1)[1].body).description).toBe(
-    "Verified PR31 source update; not translation approval",
+    "Verified PR33 source update; not translation approval",
   );
 });
 

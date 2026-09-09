@@ -7,59 +7,44 @@ import { fileURLToPath } from "node:url";
 
 export const sourceScope = Object.freeze({
   repository: "aidanaden/jupiter-i18n-translation-pilot",
-  taskRef: "refs/heads/aidan/crowdin-auto-source-check-20260910",
-  number: 31,
+  taskRef: "refs/heads/aidan/crowdin-ai-visible-source-check-20260910",
+  number: 33,
   baseBranch: "aidan/provider-e2e-crowdin-ai-base",
-  baseSha: "9189ff3e87692ba0054618dee61ef6c10aa4349b",
-  baseTree: "fcedf9fc2846731c695a2ebf1eec51e5d953d140",
-  headBranch: "aidan/crowdin-auto-source-20260910",
-  headSha: "3fe66063f3847cddf598050d403e9549131b540a",
-  headTree: "2455c1a649bd10697c920c293c8f5436cc110344",
+  baseSha: "dea6d47fba3d33d876ecb7dad763fe76385c102e",
+  baseTree: "9359fcb997f739f855f6f7b698d61af64e644ac6",
+  headBranch: "aidan/crowdin-ai-visible-source-20260910",
+  headSha: "1abaf338ff8dd129c2abb4c14ff7a9bc26bcba05",
+  headTree: "e6b6804ccb711d0cb85668b3d2b6574e4d244582",
   files: Object.freeze([
     Object.freeze({
-      path: "scripts/provider-e2e/crowdin-ai-review-evidence.test.mjs",
-      blob: "e3314a51cc52c8c83a689fb337ed6b3564dcba62",
-      size: 12209,
-    }),
-    Object.freeze({
-      path: "scripts/provider-e2e/full-app-review.test.mjs",
-      blob: "d2ec3a7aea441b62f3791479fbcce1f089e38f5b",
-      size: 34786,
-    }),
-    Object.freeze({
       path: "src/i18n/locales/en-XA/messages.ts",
-      blob: "de31a741d0e0b1907403ecae3d83afa9ee7c645a",
-      size: 2258,
+      blob: "56129e0991e2b7a3c970056b4b915fa062b8bf2a",
+      size: 2282,
     }),
     Object.freeze({
       path: "src/i18n/locales/en/messages.po",
-      blob: "86fbf352bfa64589784be82b7b371ba360d748ba",
-      size: 3195,
+      blob: "fc78e7166cbf51d6464188f2c8c1f7c83a1d1adc",
+      size: 3206,
     }),
     Object.freeze({
       path: "src/i18n/locales/en/messages.ts",
-      blob: "078bc64a060c72e37b5f0f9dd2988dad504578e9",
-      size: 1388,
+      blob: "6ef70499c761a42416b0c53c0c41fe5477ba6067",
+      size: 1399,
     }),
     Object.freeze({
       path: "src/i18n/locales/zh-Hans/messages.ts",
-      blob: "cece46742f743a4391ebe1708bf4d3cfb0e9d453",
-      size: 1302,
+      blob: "e4d7a41a92ce2f81ed1b7cbb2e3adff4c55553e4",
+      size: 1329,
     }),
     Object.freeze({
       path: "src/i18n/messages.ts",
-      blob: "7f18900a18ea56b9cdbff7a194decfb0939dbf7b",
-      size: 3502,
-    }),
-    Object.freeze({
-      path: "src/i18n/router-integration.test.ts",
-      blob: "f5b28ce6868b6c2b7fef97335e4ce0901da92e7c",
-      size: 4662,
+      blob: "2690ae8e7c7544b2fffb95613a03d197debfa198",
+      size: 3513,
     }),
   ]),
-  runId: 34399473578,
-  jobId: 102627469391,
-  checkSuiteId: 93190882384,
+  runId: 34416174286,
+  jobId: 102681433563,
+  checkSuiteId: 93235775352,
   appId: 15368,
 });
 const prefix = `/repos/${sourceScope.repository}`;
@@ -172,7 +157,7 @@ export function verifySourceCheck({
     body: Object.freeze({
       state: "success",
       context: "crowdin-ai-delivery",
-      description: "Verified PR31 source update; not translation approval",
+      description: "Verified PR33 source update; not translation approval",
       target_url: `https://github.com/${sourceScope.repository}/actions/runs/${sourceScope.runId}`,
     }),
   });
@@ -257,14 +242,14 @@ export async function runSourceCheck({
   await response.body?.cancel();
   await summary(
     env.GITHUB_STEP_SUMMARY,
-    `Verified source-only change for PR31 at ${sourceScope.headSha}. Only ${sourceScope.files.map((file) => file.path).join(", ")} changed. Exact CI verify check ${sourceScope.jobId} passed under Actions app 15368. Chinese PO unchanged. Not translation approval. No provider access, merge, deployment, or branch protection change.\n`,
+    `Verified source-only change for PR33 at ${sourceScope.headSha}. Only ${sourceScope.files.map((file) => file.path).join(", ")} changed. Exact CI verify check ${sourceScope.jobId} passed under Actions app 15368. Chinese PO unchanged. Not translation approval. No provider access, merge, deployment, or branch protection change.\n`,
   );
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runSourceCheck().catch(() => {
     process.stderr.write(
-      "Authorized PR31 source check failed validation or status publication. No credential or response content was logged.\n",
+      "Authorized PR33 source check failed validation or status publication. No credential or response content was logged.\n",
     );
     process.exitCode = 1;
   });
