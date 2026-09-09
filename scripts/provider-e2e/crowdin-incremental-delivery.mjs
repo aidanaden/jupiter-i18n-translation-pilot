@@ -25,6 +25,19 @@ const targetPath = "src/i18n/locales/zh-Hans/messages.po";
 const shaPattern = /^[a-f0-9]{40}$/u;
 const po = formatter({ explicitIdAsDefault: true });
 
+export class NativeSourceMismatchError extends Error {
+  constructor(entry, expectedText) {
+    super("Native source changed");
+    this.facts = {
+      id: Number.isSafeInteger(entry.id) ? entry.id : null,
+      revision: Number.isSafeInteger(entry.revision) ? entry.revision : null,
+      projectMatches: entry.projectId === incrementalScope.projectId,
+      fileMatches: entry.fileId === incrementalScope.fileId,
+      textMatches: entry.text === expectedText,
+    };
+  }
+}
+
 function requireValue(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -96,13 +109,13 @@ function validateNativeState(state, source, end) {
   );
   for (const entry of state.strings) {
     positiveId(entry.id);
-    requireValue(
-      entry.projectId === incrementalScope.projectId &&
-        entry.fileId === incrementalScope.fileId &&
-        entry.text === source[entry.identifier]?.translation &&
-        entry.revision === 1,
-      "Native source changed",
-    );
+    if (
+      entry.projectId !== incrementalScope.projectId ||
+      entry.fileId !== incrementalScope.fileId ||
+      entry.text !== source[entry.identifier]?.translation ||
+      entry.revision !== 1
+    )
+      throw new NativeSourceMismatchError(entry, source[entry.identifier]?.translation);
     const created = time(entry.createdAt);
     requireValue(
       created <= end &&

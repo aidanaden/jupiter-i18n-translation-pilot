@@ -5,6 +5,7 @@ import { expect, test } from "vitest";
 import { formatter } from "@lingui/format-po";
 
 import {
+  NativeSourceMismatchError,
   prepareIncrementalDelivery,
   verifyIncrementalCandidate,
 } from "./crowdin-incremental-delivery.mjs";
@@ -20,6 +21,26 @@ const blob = (value) =>
     .update(`blob ${Buffer.byteLength(value)}\0`)
     .update(value)
     .digest("hex");
+
+test("source mismatch diagnostics expose only numeric IDs and comparison results", () => {
+  const error = new NativeSourceMismatchError(
+    { id: 104, revision: 2, projectId: 927431, fileId: 26, text: "private response" },
+    "expected source",
+  );
+  expect(error.message).toBe("Native source changed");
+  expect(error.facts).toEqual({
+    id: 104,
+    revision: 2,
+    projectMatches: true,
+    fileMatches: true,
+    textMatches: false,
+  });
+  const unsafe = new NativeSourceMismatchError({ id: "secret", revision: "secret" }, "source");
+  expect(unsafe.facts.id).toBeNull();
+  expect(unsafe.facts.revision).toBeNull();
+  expect(JSON.stringify([error, unsafe])).not.toContain("secret");
+  expect(JSON.stringify(error)).not.toContain("private response");
+});
 
 function input() {
   const strings = Object.entries(formatter({ explicitIdAsDefault: true }).parse(sourcePo)).map(
