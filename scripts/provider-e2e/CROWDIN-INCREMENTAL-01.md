@@ -47,8 +47,20 @@ The old PR30 export must not be merged: it contains English fallback for12 entri
 The continued recording authorizes one isolated read-only evidence job on
 `aidan/crowdin-incremental-delivery-20260910`. It checks out the exact push SHA,
 uses the existing project-limited secret, and only prepares evidence. The CLI
-rejects other workflow contexts and verify mode in a workflow. No existing
+rejects other workflow contexts. No existing
 workflow, protected delivery status, main, or deployment is changed by this job.
+
+The separate `crowdin-incremental-check.yml` workflow verifies only PR32 at
+`1f406fb0a4f4f40f38f088cc944a34889a5909e0`, against base
+`4a3b616c43a2f2bd32130cd56550d04affcb111f`. It runs only on the same isolated
+task branch. Workflow verification in the CLI requires this exact workflow ref
+and candidate SHA. It checks the live Git base ref, not stale PR base metadata.
+It pins the successful CI run34411789697, job102667648715, suite93224405476,
+and Actions app15368. It then runs the native collector and whole-tree check
+again. Only after that check and a second head check can it publish the required
+`crowdin-ai-delivery` status. It first sets that status to pending so a failed
+repeat cannot leave an earlier success in place. It does not merge, deploy,
+change branch protection, or change the existing full-catalog workflow.
 
 ## Reuse decision
 

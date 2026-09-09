@@ -10,6 +10,33 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+test.each([
+  [
+    "evidence workflow",
+    "1f406fb0a4f4f40f38f088cc944a34889a5909e0",
+    "crowdin-incremental-evidence.yml",
+  ],
+  ["other candidate", "2".repeat(40), "crowdin-incremental-check.yml"],
+])("CLI refuses verification from %s before executing commands", async (_, candidate, workflow) => {
+  vi.stubEnv("GITHUB_EVENT_NAME", "push");
+  vi.stubEnv("GITHUB_REPOSITORY", "aidanaden/jupiter-i18n-translation-pilot");
+  vi.stubEnv("GITHUB_REF", "refs/heads/aidan/crowdin-incremental-delivery-20260910");
+  vi.stubEnv(
+    "GITHUB_WORKFLOW_REF",
+    `aidanaden/jupiter-i18n-translation-pilot/.github/workflows/${workflow}@refs/heads/aidan/crowdin-incremental-delivery-20260910`,
+  );
+  const calls = [];
+  await expect(
+    runIncrementalCli(["verify", "/tmp/must-not-exist", candidate], {
+      runCommand: (command) => {
+        calls.push(command);
+        throw new Error("Unexpected command");
+      },
+    }),
+  ).rejects.toThrow("Unapproved workflow context");
+  expect(calls).toEqual([]);
+});
+
 test("the evidence job reads only on the isolated branch and cannot publish delivery status", () => {
   const workflow = parse(
     readFileSync(".github/workflows/crowdin-incremental-evidence.yml", "utf8"),

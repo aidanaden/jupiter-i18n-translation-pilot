@@ -9,6 +9,7 @@ import { validateCatalogs } from "./offline-runner.mjs";
 export const incrementalScope = Object.freeze({
   repository: "aidanaden/jupiter-i18n-translation-pilot",
   baseBranch: "aidan/provider-e2e-crowdin-ai-base",
+  candidateSha: "1f406fb0a4f4f40f38f088cc944a34889a5909e0",
   integrationBranch: "aidan.provider-e2e-crowdin-ai-base",
   projectId: 927431,
   fileId: 26,

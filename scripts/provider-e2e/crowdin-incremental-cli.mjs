@@ -21,10 +21,13 @@ export async function runIncrementalCli(args, { runCommand = execFileSync } = {}
     throw new Error("Usage: prepare OUTPUT or verify OUTPUT FULL_COMMIT_SHA");
   if (
     process.env.GITHUB_EVENT_NAME &&
-    (mode !== "prepare" ||
-      process.env.GITHUB_EVENT_NAME !== "push" ||
+    (process.env.GITHUB_EVENT_NAME !== "push" ||
       process.env.GITHUB_REPOSITORY !== incrementalScope.repository ||
-      process.env.GITHUB_REF !== "refs/heads/aidan/crowdin-incremental-delivery-20260910")
+      process.env.GITHUB_REF !== "refs/heads/aidan/crowdin-incremental-delivery-20260910" ||
+      (mode === "verify" &&
+        (candidate !== incrementalScope.candidateSha ||
+          process.env.GITHUB_WORKFLOW_REF !==
+            `${incrementalScope.repository}/.github/workflows/crowdin-incremental-check.yml@refs/heads/aidan/crowdin-incremental-delivery-20260910`)))
   )
     throw new Error("Unapproved workflow context");
   const git = (...gitArgs) =>
@@ -100,6 +103,7 @@ export async function runIncrementalCli(args, { runCommand = execFileSync } = {}
   process.stdout.write(
     "Prepared one reviewed message; preserved12 accepted entries. No status, merge, or deployment authorized.\n",
   );
+  return receipt;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
