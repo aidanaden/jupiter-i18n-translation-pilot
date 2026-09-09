@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 
 import { expect, it, vi } from "vitest";
 import { parse } from "yaml";
@@ -338,11 +338,14 @@ it.each([
   expect(() => verifyRepairException(copy)).toThrow();
 });
 
-it("runs trusted task code without candidate checkout, Crowdin credentials, or dependency install", () => {
+it("removes the one-time trigger and retains its trusted-code audit", () => {
+  expect(
+    existsSync(new URL("../../.github/workflows/crowdin-ai-repair-exception.yml", import.meta.url)),
+  ).toBe(false);
   const flow = parse(
-    readFileSync(
-      new URL("../../.github/workflows/crowdin-ai-repair-exception.yml", import.meta.url),
-      "utf8",
+    git(
+      "show",
+      "d0675b81821cfe43e6a62c5c79f67f45ee850203:.github/workflows/crowdin-ai-repair-exception.yml",
     ),
   );
   expect(flow.on).toEqual({ push: { branches: ["aidan/crowdin-ai-recording-02"] } });

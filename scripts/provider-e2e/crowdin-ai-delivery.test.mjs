@@ -113,6 +113,25 @@ it("passes an exact 13-message candidate bound to current native approval record
   });
 });
 
+it("pins the integrated repair base and candidate without changing source, target or saved capture", () => {
+  expect(deliveryScope.baseSha).toBe("2e476be7ab29563470a358d8a1ddbffe05034f17");
+  expect(deliveryScope.headSha).toBe("148bcfc4cae92ab35563164de59b382c75384803");
+  expect(sourcePo).toBe(git("show", `e317c1d76b0a813954c0f46063047f8f15f1942c:${sourcePath}`));
+  expect(captureText).toBe(
+    git(
+      "show",
+      "e317c1d76b0a813954c0f46063047f8f15f1942c:scripts/provider-e2e/crowdin-ai-review-capture.json",
+    ),
+  );
+  expect(git("show", `${headSha}:${targetPath}`)).toBe(
+    git("show", `3f951a5975d9a8d4d59fa747b1cd87bfab022033:${targetPath}`),
+  );
+  const old = structuredClone(input);
+  old.currentPr.base.sha = "e317c1d76b0a813954c0f46063047f8f15f1942c";
+  old.currentPr.head.sha = "3f951a5975d9a8d4d59fa747b1cd87bfab022033";
+  expect(() => verifyCrowdinAiDelivery(old)).toThrow();
+});
+
 it("accepts the push event shape only on the trusted task ref", () => {
   expect(() => validateCrowdinPush(input.event, trustedTaskHead)).not.toThrow();
   expect(trustedTaskHead).not.toBe(baseHead);
