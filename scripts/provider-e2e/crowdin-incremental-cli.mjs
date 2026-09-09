@@ -10,7 +10,7 @@ import {
 } from "./crowdin-incremental-delivery.mjs";
 import { collectIncrementalSnapshot } from "./crowdin-incremental-read.mjs";
 
-export async function runIncrementalCli(args) {
+export async function runIncrementalCli(args, { runCommand = execFileSync } = {}) {
   const [mode, outputPath, candidate] = args;
   if (
     !outputPath ||
@@ -28,13 +28,13 @@ export async function runIncrementalCli(args) {
   )
     throw new Error("Unapproved workflow context");
   const git = (...gitArgs) =>
-    execFileSync("git", gitArgs, {
+    runCommand("git", gitArgs, {
       encoding: "utf8",
       maxBuffer: 5000000,
       stdio: ["ignore", "pipe", "pipe"],
     });
   const currentBase = () => {
-    const sha = execFileSync(
+    const sha = runCommand(
       "gh",
       [
         "api",

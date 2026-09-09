@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 import { afterEach, expect, test, vi } from "vitest";
@@ -6,7 +5,6 @@ import { parse } from "yaml";
 
 import { runIncrementalCli } from "./crowdin-incremental-cli.mjs";
 
-vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.clearAllMocks();
@@ -54,15 +52,17 @@ test.each([
     ...override,
   }))
     vi.stubEnv(name, value);
-  vi.mocked(execFileSync).mockImplementation((command, args) => {
+  const calls = [];
+  const runCommand = (command, args) => {
+    calls.push(command);
     if (command === "git" && JSON.stringify(args) === JSON.stringify(["rev-parse", "HEAD"]))
       return "1".repeat(40);
     throw new Error("Unexpected external command");
-  });
+  };
   await expect(
-    runIncrementalCli(["prepare", "/tmp/crowdin-evidence-must-not-exist"]),
+    runIncrementalCli(["prepare", "/tmp/crowdin-evidence-must-not-exist"], { runCommand }),
   ).rejects.toThrow(
     override.GITHUB_SHA ? "Wrong trusted workflow checkout" : "Unapproved workflow context",
   );
-  expect(vi.mocked(execFileSync).mock.calls.every(([command]) => command === "git")).toBe(true);
+  expect(calls.every((command) => command === "git")).toBe(true);
 });
