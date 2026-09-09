@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  NativeSourceMismatchError,
   incrementalScope,
   prepareIncrementalDelivery,
   verifyIncrementalCandidate,
@@ -121,6 +122,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       "Approval or correction predates source, or is in the future",
     ]);
     if (safeMessages.has(error?.message)) process.stderr.write(`Check failed: ${error.message}.\n`);
+    if (error instanceof NativeSourceMismatchError)
+      process.stderr.write(`Source check facts: ${JSON.stringify(error.facts)}\n`);
     process.stderr.write(
       "Incremental preparation failed. No authorization was issued. Check inputs and access without logging credentials.\n",
     );
