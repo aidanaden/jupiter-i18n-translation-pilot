@@ -1,0 +1,31 @@
+name: Authorized Crowdin AI test repair exception
+
+on:
+  push:
+    branches:
+      - aidan/crowdin-ai-recording-02
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  checks: read
+  statuses: write
+
+jobs:
+  authorized-test-repair:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-ai-recording-02'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/provider-e2e/crowdin-ai-repair-exception.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+
