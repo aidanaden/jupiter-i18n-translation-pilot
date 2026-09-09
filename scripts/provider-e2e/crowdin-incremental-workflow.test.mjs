@@ -1,8 +1,16 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { parse } from "yaml";
+
+import { runIncrementalCli } from "./crowdin-incremental-cli.mjs";
+
+vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.clearAllMocks();
+});
 
 test("the evidence job reads only on the isolated branch and cannot publish delivery status", () => {
   const workflow = parse(
@@ -37,26 +45,24 @@ test.each([
   { GITHUB_REPOSITORY: "other/repo" },
   { GITHUB_REF: "refs/heads/main" },
   { GITHUB_SHA: "0".repeat(40) },
-])("CLI rejects an untrusted workflow before reading credentials: %j", (override) => {
-  expect(() =>
-    execFileSync(
-      process.execPath,
-      [
-        "scripts/provider-e2e/crowdin-incremental-cli.mjs",
-        "prepare",
-        "/tmp/crowdin-evidence-must-not-exist",
-      ],
-      {
-        env: {
-          ...process.env,
-          GITHUB_EVENT_NAME: "push",
-          GITHUB_REPOSITORY: "aidanaden/jupiter-i18n-translation-pilot",
-          GITHUB_REF: "refs/heads/aidan/crowdin-incremental-delivery-20260910",
-          GITHUB_SHA: "0".repeat(40),
-          ...override,
-        },
-        stdio: "pipe",
-      },
-    ),
-  ).toThrow();
+])("CLI rejects an untrusted workflow before reading credentials: %j", async (override) => {
+  for (const [name, value] of Object.entries({
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_REPOSITORY: "aidanaden/jupiter-i18n-translation-pilot",
+    GITHUB_REF: "refs/heads/aidan/crowdin-incremental-delivery-20260910",
+    GITHUB_SHA: "1".repeat(40),
+    ...override,
+  }))
+    vi.stubEnv(name, value);
+  vi.mocked(execFileSync).mockImplementation((command, args) => {
+    if (command === "git" && JSON.stringify(args) === JSON.stringify(["rev-parse", "HEAD"]))
+      return "1".repeat(40);
+    throw new Error("Unexpected external command");
+  });
+  await expect(
+    runIncrementalCli(["prepare", "/tmp/crowdin-evidence-must-not-exist"]),
+  ).rejects.toThrow(
+    override.GITHUB_SHA ? "Wrong trusted workflow checkout" : "Unapproved workflow context",
+  );
+  expect(vi.mocked(execFileSync).mock.calls.every(([command]) => command === "git")).toBe(true);
 });
