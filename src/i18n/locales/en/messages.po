@@ -57,7 +57,7 @@ msgstr "Review swap"
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
 #: src/i18n/messages.ts
 msgid "pilot.recording.proof"
-msgstr "Translation rehearsal complete"
+msgstr "AI translation starts after a source update"
 
 #. Sandbox-only empty state shown without a network request.
 #: src/i18n/messages.ts

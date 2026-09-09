@@ -1,6 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 
 import { formatter } from "@lingui/format-po";
 import { describe, expect, it } from "vitest";
@@ -10,9 +9,10 @@ import { createCrowdinAiBaseline, stageCrowdinAiCandidate } from "./crowdin-ai-c
 import { lingoJsonToPo } from "./lingo-json.mjs";
 import { captureCrowdinAiReview, finalizeCrowdinAiReview } from "./crowdin-ai-review-evidence.mjs";
 
-const sourcePo = readFileSync(
-  new URL("../../src/i18n/locales/en/messages.po", import.meta.url),
-  "utf8",
+const sourcePo = execFileSync(
+  "git",
+  ["show", "96bbb4619507225bf663b44b221ded24b95f9777:src/i18n/locales/en/messages.po"],
+  { cwd: new URL("../../", import.meta.url), encoding: "utf8" },
 );
 const source = formatter({ explicitIdAsDefault: true }).parse(sourcePo);
 const disclosure = "Automated test reviewer. No human language review.";

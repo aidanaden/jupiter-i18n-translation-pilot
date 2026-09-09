@@ -29,8 +29,9 @@ const pinnedTarget = execFileSync("git", ["show", `${resetBaselineSha}:${target}
   encoding: "utf8",
 });
 
-async function fixture() {
-  const sourcePo = await readFile(new URL(`../../${source}`, import.meta.url), "utf8");
+async function fixture(pinnedSourcePo) {
+  const sourcePo =
+    pinnedSourcePo ?? (await readFile(new URL(`../../${source}`, import.meta.url), "utf8"));
   const baselineTargetPo = await readFile(new URL(`../../${target}`, import.meta.url), "utf8");
   const messages = poToLingoJson(sourcePo, { expectedMessageCount: 13 });
   const rawTargetPo = lingoJsonToPo(
@@ -652,7 +653,12 @@ it("prepares without the Administration permission and marks branch protection a
 });
 
 async function resetFixture() {
-  const input = await fixture();
+  const input = await fixture(
+    execFileSync("git", ["show", `${resetBaselineSha}:${source}`], {
+      cwd: fileURLToPath(new URL("../../", import.meta.url)),
+      encoding: "utf8",
+    }),
+  );
   input.baselineTargetPo = input.candidatePo;
   input.rawTargetPo = pinnedTarget;
   input.candidatePo = pinnedTarget;
