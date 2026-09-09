@@ -1,0 +1,40 @@
+name: Verify exact Crowdin incremental candidate
+
+on:
+  push:
+    branches:
+      - aidan/crowdin-incremental-delivery-20260910
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  checks: read
+  statuses: write
+
+jobs:
+  verify-candidate:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-incremental-delivery-20260910'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node scripts/provider-e2e/crowdin-incremental-check.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_AI_RECORDING_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crowdin-incremental-verified-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crowdin-incremental-verified
+          retention-days: 7
+          if-no-files-found: error
