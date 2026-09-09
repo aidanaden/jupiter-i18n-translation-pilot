@@ -72,12 +72,12 @@ export async function collectIncrementalSnapshot({
   }
   async function readState() {
     const project = selectProject((await get(projectPath)).data);
-    const rawFile = (await get(`${projectPath}/files/26`)).data;
+    const rawFile = (await get(`${projectPath}/files/${incrementalScope.fileId}`)).data;
     if (
-      rawFile?.id !== 26 ||
-      rawFile.projectId !== 927431 ||
+      rawFile?.id !== incrementalScope.fileId ||
+      rawFile.projectId !== incrementalScope.projectId ||
       rawFile.name !== "messages.po" ||
-      rawFile.revisionId !== 2
+      rawFile.revisionId !== incrementalScope.fileRevision
     )
       throw new Error("Wrong native file");
     const file = {
@@ -108,9 +108,10 @@ export async function collectIncrementalSnapshot({
     }
     if (directoryId !== null && directoryId !== 0) throw new Error("Unexpected parent directory");
     const strings = await list(
-      "/strings?fileId=26",
+      `/strings?fileId=${incrementalScope.fileId}`,
       (raw) => {
-        if (raw?.projectId !== 927431 || raw.fileId !== 26) throw new Error("Wrong source scope");
+        if (raw?.projectId !== incrementalScope.projectId || raw.fileId !== incrementalScope.fileId)
+          throw new Error("Wrong source scope");
         return {
           id: raw.id,
           projectId: raw.projectId,
@@ -125,11 +126,15 @@ export async function collectIncrementalSnapshot({
       "id",
     );
     const translations = await list(
-      "/languages/zh-CN/translations?fileId=26",
+      `/languages/zh-CN/translations?fileId=${incrementalScope.fileId}`,
       selectTranslation,
       "stringId",
     );
-    const approvals = await list("/approvals?languageId=zh-CN&fileId=26", selectApproval, "id");
+    const approvals = await list(
+      `/approvals?languageId=zh-CN&fileId=${incrementalScope.fileId}`,
+      selectApproval,
+      "id",
+    );
     return { project, file, branch, directories, strings, translations, approvals };
   }
   const first = await readState();

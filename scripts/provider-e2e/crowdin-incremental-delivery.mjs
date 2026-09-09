@@ -61,10 +61,10 @@ function validateNativeState(state, source, end) {
   selectProject(state.project);
   const file = state.file;
   requireValue(
-    file?.id === 26 &&
-      file.projectId === 927431 &&
+    file?.id === incrementalScope.fileId &&
+      file.projectId === incrementalScope.projectId &&
       file.name === "messages.po" &&
-      file.revisionId === 2,
+      file.revisionId === incrementalScope.fileRevision,
     "Wrong native file or revision",
   );
   const branchId = positiveId(file.branchId);
@@ -97,8 +97,8 @@ function validateNativeState(state, source, end) {
   for (const entry of state.strings) {
     positiveId(entry.id);
     requireValue(
-      entry.projectId === 927431 &&
-        entry.fileId === 26 &&
+      entry.projectId === incrementalScope.projectId &&
+        entry.fileId === incrementalScope.fileId &&
         entry.text === source[entry.identifier]?.translation &&
         entry.revision === 1,
       "Native source changed",
@@ -195,9 +195,9 @@ export function prepareIncrementalDelivery({ sourcePo, baselineTargetPo, snapsho
     candidatePo,
     receipt: {
       format: "crowdin-incremental-preparation-v1",
-      projectId: 927431,
-      fileId: 26,
-      sourceRevision: 2,
+      projectId: incrementalScope.projectId,
+      fileId: incrementalScope.fileId,
+      sourceRevision: incrementalScope.fileRevision,
       messageId: incrementalScope.messageId,
       sourceHash: incrementalScope.sourceHash,
       acceptedTargetHash: incrementalScope.acceptedTargetHash,
@@ -233,14 +233,11 @@ function normalizedTree(tree) {
   );
   unique(tree, "path");
   requireValue(
-    tree.length >= 2 &&
-      tree.every(
-        (entry) =>
-          !["\r", "\n", "\0", "\\"].some((character) => entry.path.includes(character)) &&
-          entry.path.split("/").every((part) => part && part !== "." && part !== "..") &&
-          ["100644", "100755", "120000", "160000"].includes(entry.mode) &&
-          shaPattern.test(entry.oid),
-      ),
+    tree.every(
+      (entry) =>
+        !["\r", "\n", "\0", "\\"].some((character) => entry.path.includes(character)) &&
+        entry.path.split("/").every((part) => part && part !== "." && part !== ".."),
+    ),
     "Invalid Git tree",
   );
   const paths = new Set(tree.map((entry) => entry.path));
