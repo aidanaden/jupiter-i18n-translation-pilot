@@ -68,7 +68,7 @@ export const REVIEW_SWAP_MESSAGE = /* i18n */ {
 export const TRANSLATION_REHEARSAL_PROOF_MESSAGE = /* i18n */ {
   comment: "Synthetic proof message used only by the autonomous end-to-end translation rehearsal.",
   id: "pilot.recording.proof",
-  message: "Translation rehearsal complete",
+  message: "AI translation starts after a source update",
 };
 
 export const ONBOARD_UNAVAILABLE_MESSAGE = /* i18n */ {

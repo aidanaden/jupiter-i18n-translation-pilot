@@ -70,6 +70,10 @@ describe("Lingui router hydration", () => {
   it("renders Chinese on the first client render after hydrating the server locale", async () => {
     const serverI18n = createI18nInstance();
     serverI18n.activate(Locale.SIMPLIFIED_CHINESE);
+    const serverText = serverI18n._({
+      ...ONBOARD_TITLE_MESSAGE,
+      values: ONBOARD_PROTECTED_VALUES,
+    });
     const serverRouter = createHydrationRouter(serverI18n, true, () => undefined);
     await serverRouter.load();
     const dehydrated = await serverRouter.options.dehydrate?.();
@@ -88,7 +92,7 @@ describe("Lingui router hydration", () => {
 
     expect(renderedLocales).toEqual([Locale.SIMPLIFIED_CHINESE]);
     expect(document.documentElement.lang).toBe(Locale.SIMPLIFIED_CHINESE);
-    expect(document.querySelector("output")?.textContent).toBe("通过 Jupiter 充值");
+    expect(document.querySelector("output")?.textContent).toBe(serverText);
   });
 });
 
