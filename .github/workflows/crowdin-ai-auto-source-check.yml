@@ -3,7 +3,7 @@ name: Verify approved Crowdin source update
 on:
   push:
     branches:
-      - aidan/crowdin-auto-source-check-20260910
+      - aidan/crowdin-ai-visible-source-check-20260910
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   source-safety:
-    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-auto-source-check-20260910'
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-ai-visible-source-check-20260910'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -28,4 +28,3 @@ jobs:
       - run: node scripts/provider-e2e/crowdin-ai-auto-source-check.mjs
         env:
           GH_TOKEN: ${{ github.token }}
-
