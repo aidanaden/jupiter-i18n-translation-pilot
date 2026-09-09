@@ -277,11 +277,16 @@ function verifyEvidence(baseline, evidence, exportedPo) {
       "Exported approved content",
     );
   }
-  const candidatePo = lingoJsonToPo(
+  const translatedPo = lingoJsonToPo(
     baseline.current.sourcePo,
     Object.fromEntries(data.entries.map((entry) => [entry.messageId, entry.translationText])),
     { expectedMessageCount: 13 },
   );
+  const candidatePo = po.serialize(po.parse(translatedPo), {
+    locale: "zh-Hans",
+    sourceLocale: "en",
+    existing: baseline.current.targetPo,
+  });
   validateCatalogs({
     sourcePo: baseline.current.sourcePo,
     targetPo: candidatePo,

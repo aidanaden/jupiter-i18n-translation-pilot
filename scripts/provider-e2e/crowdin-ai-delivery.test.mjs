@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
+import { formatter } from "@lingui/format-po";
 import { expect, it } from "vitest";
 import { parse } from "yaml";
 
@@ -22,13 +23,17 @@ const git = (...args) =>
   execFileSync("git", args, { encoding: "utf8", cwd: new URL("../../", import.meta.url) });
 const sourcePo = git("show", `${baseHead}:${sourcePath}`);
 const baselineTargetPo = git("show", `${baseHead}:${targetPath}`);
+const po = formatter({ explicitIdAsDefault: true });
 const captureText = git("show", `${baseHead}:scripts/provider-e2e/crowdin-ai-review-capture.json`);
 const capture = JSON.parse(captureText);
 const snapshot = capture.preReviewSnapshot;
 const translated = Object.fromEntries(
   capture.entries.map((entry) => [entry.messageId, entry.translationText]),
 );
-const targetPo = lingoJsonToPo(sourcePo, translated, { expectedMessageCount: 13 });
+const targetPo = po.serialize(
+  po.parse(lingoJsonToPo(sourcePo, translated, { expectedMessageCount: 13 })),
+  { locale: "zh-Hans", sourceLocale: "en", existing: baselineTargetPo },
+);
 const tree = git("ls-tree", "-rz", baseHead)
   .split("\0")
   .filter(Boolean)
