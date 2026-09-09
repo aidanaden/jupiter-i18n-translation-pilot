@@ -144,7 +144,7 @@ function validateNativeState(state, source, end) {
   positiveId(translation.translationId);
   positiveId(approval.id);
   requireValue(
-    translation.contentType === "text" &&
+    translation.contentType === "text/plain" &&
       !translation.plurals &&
       translation.text === incrementalScope.reviewedText &&
       translation.userId === incrementalScope.reviewerId,

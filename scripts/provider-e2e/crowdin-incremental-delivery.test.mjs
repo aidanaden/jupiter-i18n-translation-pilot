@@ -83,7 +83,7 @@ function input() {
     translations: [
       {
         stringId,
-        contentType: "text",
+        contentType: "text/plain",
         translationId: 900,
         text: corrected,
         userId: 17853021,
@@ -204,6 +204,12 @@ test.each([
     "changed wording",
     (state) => {
       state.translations[0].text += "!";
+    },
+  ],
+  [
+    "wrong translation content type",
+    (state) => {
+      state.translations[0].contentType = "text";
     },
   ],
   [
