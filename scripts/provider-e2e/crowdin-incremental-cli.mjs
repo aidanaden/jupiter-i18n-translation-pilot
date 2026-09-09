@@ -19,8 +19,14 @@ export async function runIncrementalCli(args) {
     (mode === "verify" && !/^[a-f0-9]{40}$/u.test(candidate))
   )
     throw new Error("Usage: prepare OUTPUT or verify OUTPUT FULL_COMMIT_SHA");
-  if (process.env.GITHUB_EVENT_NAME)
-    throw new Error("Workflow activation is not part of this preparation CLI");
+  if (
+    process.env.GITHUB_EVENT_NAME &&
+    (mode !== "prepare" ||
+      process.env.GITHUB_EVENT_NAME !== "push" ||
+      process.env.GITHUB_REPOSITORY !== incrementalScope.repository ||
+      process.env.GITHUB_REF !== "refs/heads/aidan/crowdin-incremental-delivery-20260910")
+  )
+    throw new Error("Unapproved workflow context");
   const git = (...gitArgs) =>
     execFileSync("git", gitArgs, {
       encoding: "utf8",
@@ -41,6 +47,8 @@ export async function runIncrementalCli(args) {
     if (!/^[a-f0-9]{40}$/u.test(sha)) throw new Error("Invalid remote base");
     return sha;
   };
+  if (process.env.GITHUB_EVENT_NAME && git("rev-parse", "HEAD").trim() !== process.env.GITHUB_SHA)
+    throw new Error("Wrong trusted workflow checkout");
   const baseSha = currentBase();
   const sourcePo = git("show", `${baseSha}:src/i18n/locales/en/messages.po`);
   const baselineTargetPo = git("show", `${baseSha}:src/i18n/locales/zh-Hans/messages.po`);

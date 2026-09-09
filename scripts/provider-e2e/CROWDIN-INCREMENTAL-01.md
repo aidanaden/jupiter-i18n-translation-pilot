@@ -44,6 +44,12 @@ and current IDs. The browser observations are not fabricated API fixtures.
 No live API call, merge, push, deploy, or final recording is implied by unit tests.
 The old PR30 export must not be merged: it contains English fallback for12 entries.
 
+The continued recording authorizes one isolated read-only evidence job on
+`aidan/crowdin-incremental-delivery-20260910`. It checks out the exact push SHA,
+uses the existing project-limited secret, and only prepares evidence. The CLI
+rejects other workflow contexts and verify mode in a workflow. No existing
+workflow, protected delivery status, main, or deployment is changed by this job.
+
 ## Reuse decision
 
 `validateCatalogs` fits the ID/context/ICU safety contract and is reused.
