@@ -1,0 +1,37 @@
+name: Crowdin incremental read-only evidence
+
+on:
+  push:
+    branches:
+      - aidan/crowdin-incremental-delivery-20260910
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-incremental-delivery-20260910'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Read current file26 approval and prepare exact one-message export
+        run: node scripts/provider-e2e/crowdin-incremental-cli.mjs prepare "$RUNNER_TEMP/crowdin-incremental-evidence"
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_AI_RECORDING_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crowdin-incremental-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crowdin-incremental-evidence
+          retention-days: 7
+          if-no-files-found: error
