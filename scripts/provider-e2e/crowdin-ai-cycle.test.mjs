@@ -151,6 +151,106 @@ const resetInput = {
 };
 
 it.each([
+  ["minute", "2026-09-09T00:20:59Z", "2026-09-09T00:21:00Z"],
+  ["day", "2026-09-09T23:59:59Z", "2026-09-10T00:00:00Z"],
+])(
+  "keeps candidate, repeat and reset bytes stable across a %s boundary",
+  (_label, before, after) => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(before));
+      const first = stageCrowdinAiCandidate(stageInput);
+      vi.setSystemTime(new Date(after));
+      const later = stageCrowdinAiCandidate(stageInput);
+      expect(later).toEqual(first);
+      const current = {
+        ...acceptedCurrent,
+        targetPo: first.candidatePo,
+        tree: baseline.current.tree.map((entry) =>
+          entry.path === targetPath ? { ...entry, oid: blob(first.candidatePo) } : entry,
+        ),
+      };
+      const record = acceptCrowdinAiCandidate({
+        ...acceptInput,
+        candidate: first,
+        expectedCandidateDigest: first.digest,
+        current,
+      });
+      const cycle = {
+        ...acceptedInput,
+        accepted: record,
+        expectedAcceptedDigest: record.digest,
+        current,
+      };
+      expect(planCrowdinAiRepeatExport({ ...cycle, evidence, exportedPo }).phase).toBe("no-op");
+      expect(planCrowdinAiReset(cycle).baselineTargetPo).toBe(baselineTargetPo);
+      expect(verifyCrowdinAiReset({ ...resetInput, before: cycle }).phase).toBe("reset");
+    } finally {
+      vi.useRealTimers();
+    }
+  },
+);
+
+it("uses identical candidate bytes and digest in separate UTC, Singapore and Los Angeles processes", () => {
+  const outputs = ["UTC", "Asia/Singapore", "America/Los_Angeles"].map((TZ) => {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `
+      import { stageCrowdinAiCandidate, acceptCrowdinAiCandidate, planCrowdinAiRepeatExport, planCrowdinAiReset, verifyCrowdinAiReset } from ${JSON.stringify(new URL("./crowdin-ai-cycle.mjs", import.meta.url).href)};
+      const OriginalDate = Date;
+      globalThis.Date = class extends OriginalDate {
+        constructor(...args) { super(...(args.length ? args : ["2026-09-09T00:21:00Z"])); }
+        static now() { return OriginalDate.parse("2026-09-09T00:21:00Z"); }
+      };
+      const chunks = [];
+      for await (const chunk of process.stdin) chunks.push(chunk);
+      const input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      process.stdout.write(JSON.stringify([
+        stageCrowdinAiCandidate(input.stage), acceptCrowdinAiCandidate(input.accept),
+        planCrowdinAiRepeatExport(input.repeat), planCrowdinAiReset(input.resetPlan), verifyCrowdinAiReset(input.reset)
+      ]));
+    `,
+      ],
+      {
+        encoding: "utf8",
+        input: JSON.stringify({
+          stage: stageInput,
+          accept: acceptInput,
+          repeat: { ...acceptedInput, evidence, exportedPo },
+          resetPlan: acceptedInput,
+          reset: resetInput,
+        }),
+        env: { ...process.env, TZ },
+      },
+    );
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    return result.stdout;
+  });
+  expect(outputs[1]).toBe(outputs[0]);
+  expect(outputs[2]).toBe(outputs[0]);
+});
+
+it("uses only the verified baseline header and preserves all translated body bytes", () => {
+  const header = (value) => value.slice(0, value.indexOf("\n\n"));
+  const body = (value) => value.slice(value.indexOf("\n\n"));
+  const oldTarget = lingoJsonToPo(sourcePo, translations, { expectedMessageCount: 13 });
+  expect(header(candidate.candidatePo)).toBe(header(baselineTargetPo));
+  expect(body(candidate.candidatePo)).toBe(body(oldTarget));
+  expect(po.parse(candidate.candidatePo)).toEqual(po.parse(oldTarget));
+  const variedExport = exportedPo.replace(
+    /POT-Creation-Date: [^\n]+/,
+    'POT-Creation-Date: 2099-01-01 01:00+1200\\n"',
+  );
+  expect(stageCrowdinAiCandidate({ ...stageInput, exportedPo: variedExport }).candidatePo).toBe(
+    candidate.candidatePo,
+  );
+});
+
+it.each([
   ["baseline", baselineInput, baseline],
   ["stage", stageInput, candidate],
   ["accept", acceptInput, accepted],

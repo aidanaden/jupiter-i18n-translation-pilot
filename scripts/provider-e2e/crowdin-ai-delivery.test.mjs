@@ -28,7 +28,10 @@ const translated = Object.fromEntries(
   ]),
 );
 translated["baseline.swap.review"] = "测试修订：查看兑换";
-const targetPo = lingoJsonToPo(sourcePo, translated, { expectedMessageCount: 13 });
+const targetPo = po.serialize(
+  po.parse(lingoJsonToPo(sourcePo, translated, { expectedMessageCount: 13 })),
+  { locale: "zh-Hans", sourceLocale: "en", existing: baselineTargetPo },
+);
 const tree = git("ls-tree", "-rz", baseHead)
   .split("\0")
   .filter(Boolean)
