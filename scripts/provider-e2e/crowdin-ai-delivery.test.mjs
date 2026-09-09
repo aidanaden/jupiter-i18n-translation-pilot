@@ -2,32 +2,32 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import { formatter } from "@lingui/format-po";
 import { expect, it } from "vitest";
 import { parse } from "yaml";
 
 import { verifyCrowdinAiDelivery } from "./crowdin-ai-delivery.mjs";
-import { createCrowdinAiStatus } from "./crowdin-ai-delivery-status.mjs";
+import {
+  createCrowdinAiStatus,
+  deliveryScope,
+  validateCrowdinPush,
+} from "./crowdin-ai-delivery-status.mjs";
 import { nativeScope } from "./crowdin-ai-native-read.mjs";
-import { captureCrowdinAiReview } from "./crowdin-ai-review-evidence.mjs";
 import { lingoJsonToPo } from "./lingo-json.mjs";
 
-const baseHead = "96bbb4619507225bf663b44b221ded24b95f9777";
+const baseHead = deliveryScope.baseSha;
+const trustedTaskHead = "5".repeat(40);
 const sourcePath = "src/i18n/locales/en/messages.po";
 const targetPath = "src/i18n/locales/zh-Hans/messages.po";
 const git = (...args) =>
   execFileSync("git", args, { encoding: "utf8", cwd: new URL("../../", import.meta.url) });
 const sourcePo = git("show", `${baseHead}:${sourcePath}`);
 const baselineTargetPo = git("show", `${baseHead}:${targetPath}`);
-const po = formatter({ explicitIdAsDefault: true });
-const source = po.parse(sourcePo);
+const captureText = git("show", `${baseHead}:scripts/provider-e2e/crowdin-ai-review-capture.json`);
+const capture = JSON.parse(captureText);
+const snapshot = capture.preReviewSnapshot;
 const translated = Object.fromEntries(
-  Object.entries(po.parse(baselineTargetPo)).map(([key, value]) => [
-    key,
-    value.translation || "翻译演练完成",
-  ]),
+  capture.entries.map((entry) => [entry.messageId, entry.translationText]),
 );
-translated["baseline.swap.review"] = "测试修订：查看兑换";
 const targetPo = lingoJsonToPo(sourcePo, translated, { expectedMessageCount: 13 });
 const tree = git("ls-tree", "-rz", baseHead)
   .split("\0")
@@ -37,66 +37,8 @@ const tree = git("ls-tree", "-rz", baseHead)
     const [mode, , oid] = details.split(" ");
     return { path, mode, oid };
   });
-const headSha = "2".repeat(40);
-const branch = "aidan/crowdin-ai-candidate-test-01";
-const snapshot = {
-  format: "crowdin-native-read-snapshot-v1",
-  scope: nativeScope,
-  startedAt: "2026-09-09T00:01:00Z",
-  completedAt: "2026-09-09T00:01:10Z",
-  atomicSnapshot: false,
-  approvalTimeContentProved: false,
-  humanApprovalProved: false,
-  deliveryAuthorized: false,
-  project: {
-    id: 927431,
-    identifier: "crowdin-ai-recording-02",
-    sourceLanguageId: "en",
-    targetLanguageIds: ["zh-CN"],
-    visibility: "private",
-  },
-  file: {
-    id: 14,
-    projectId: 927431,
-    name: "messages.po",
-    revisionId: 1,
-    branchId: null,
-    directoryId: null,
-  },
-  strings: Object.entries(source).map(([identifier, entry], index) => ({
-    id: index + 1,
-    projectId: 927431,
-    fileId: 14,
-    identifier,
-    text: entry.translation,
-    context: "context",
-    revision: 1,
-    createdAt: "2026-09-09T00:00:00Z",
-    updatedAt: null,
-  })),
-  translations: Object.keys(source).map((key, index) => ({
-    stringId: index + 1,
-    contentType: "text/plain",
-    translationId: index + 101,
-    text: translated[key],
-    userId: 99,
-    createdAt: "2026-09-09T00:00:00Z",
-  })),
-  approvals: [],
-  requests: [
-    {
-      path: "/projects/927431/strings?fileId=14&limit=100&offset=0",
-      receivedAt: "2026-09-09T00:01:05Z",
-    },
-  ],
-};
-const capture = captureCrowdinAiReview({
-  nativeSnapshot: snapshot,
-  sourcePo,
-  reviewerUserId: 42,
-  capturedAt: "2026-09-09T00:01:15Z",
-  reviewerDisclosure: "Automated test reviewer. No human language review.",
-});
+const headSha = deliveryScope.headSha;
+const branch = deliveryScope.headBranch;
 const nativeSnapshot = {
   ...snapshot,
   startedAt: "2026-09-09T00:05:00Z",
@@ -106,7 +48,7 @@ const nativeSnapshot = {
     translationId: item.translationId,
     stringId: item.stringId,
     languageId: "zh-CN",
-    userId: 42,
+    userId: capture.reviewerUserId,
     createdAt: "2026-09-09T00:03:00Z",
   })),
   requests: [
@@ -118,16 +60,24 @@ const nativeSnapshot = {
 };
 const ref = { ref: branch, sha: headSha, repo: { full_name: nativeScope.repository } };
 const pr = {
-  number: 31,
+  number: deliveryScope.number,
   state: "open",
   draft: false,
   head: ref,
   base: { ...ref, ref: "aidan/provider-e2e-crowdin-ai-base", sha: baseHead },
 };
 const input = {
-  event: { repository: { full_name: nativeScope.repository }, number: 31, pull_request: pr },
+  event: {
+    repository: { full_name: nativeScope.repository },
+    ref: deliveryScope.taskRef,
+    after: trustedTaskHead,
+    before: baseHead,
+    deleted: false,
+    forced: false,
+    head_commit: { id: trustedTaskHead },
+  },
   currentPr: structuredClone(pr),
-  trustedHead: baseHead,
+  trustedHead: trustedTaskHead,
   mergeBase: baseHead,
   baseTreeOid: git("rev-parse", `${baseHead}^{tree}`).trim(),
   sourcePo,
@@ -145,7 +95,7 @@ const input = {
       : entry,
   ),
   targetPo,
-  capture,
+  captureText,
   nativeSnapshot,
   now: "2026-09-09T00:06:00Z",
 };
@@ -161,6 +111,59 @@ it("passes an exact 13-message candidate bound to current native approval record
     mergeAllowed: false,
     deploymentAllowed: false,
   });
+});
+
+it("accepts the push event shape only on the trusted task ref", () => {
+  expect(() => validateCrowdinPush(input.event, trustedTaskHead)).not.toThrow();
+  expect(trustedTaskHead).not.toBe(baseHead);
+  for (const mutation of [
+    (event) => {
+      event.ref = "refs/heads/main";
+    },
+    (event) => {
+      event.ref = `refs/heads/${deliveryScope.headBranch}`;
+    },
+    (event) => {
+      event.deleted = true;
+    },
+    (event) => {
+      event.forced = true;
+    },
+    (event) => {
+      delete event.forced;
+    },
+    (event) => {
+      event.head_commit.id = "4".repeat(40);
+    },
+    (event) => {
+      event.after = "malformed";
+    },
+    (event) => {
+      event.repository.full_name = "other/repo";
+    },
+  ]) {
+    const event = structuredClone(input.event);
+    mutation(event);
+    expect(() => validateCrowdinPush(event, trustedTaskHead)).toThrow();
+    expect(() => verifyCrowdinAiDelivery({ ...input, event })).toThrow();
+  }
+  expect(() => validateCrowdinPush(input.event, baseHead)).toThrow();
+});
+
+it("rejects capture bytes that do not come from the pinned base blob", () => {
+  expect(() => verifyCrowdinAiDelivery({ ...input, captureText: `${captureText}\n` })).toThrow(
+    /pinned base blob/,
+  );
+  const altered = JSON.parse(captureText);
+  altered.reviewerUserId = 42;
+  expect(() =>
+    verifyCrowdinAiDelivery({ ...input, captureText: JSON.stringify(altered) }),
+  ).toThrow();
+  const code = readFileSync(new URL("./crowdin-ai-delivery.mjs", import.meta.url), "utf8");
+  for (const path of ["sourcePath", "targetPath", "capturePath"]) {
+    expect(code).toContain('git("show", `${deliveryScope.baseSha}:${' + path + "}`)");
+  }
+  expect(code).not.toContain("readBounded(capturePath)");
 });
 
 it.each([
@@ -299,7 +302,7 @@ it.each([
   [
     "missing capture",
     (p) => {
-      delete p.capture;
+      delete p.captureText;
     },
   ],
 ])("refuses %s", (_label, change) => {
@@ -308,7 +311,7 @@ it.each([
   expect(() => verifyCrowdinAiDelivery(value)).toThrow();
 });
 
-it("uses only trusted base code with the Crowdin read token", () => {
+it("uses only trusted task code with the Crowdin read token", () => {
   const workflow = parse(
     readFileSync(
       new URL("../../.github/workflows/crowdin-ai-delivery.yml", import.meta.url),
@@ -316,13 +319,14 @@ it("uses only trusted base code with the Crowdin read token", () => {
     ),
   );
   expect(workflow.name).toBe("crowdin-ai-delivery");
-  expect(workflow.on.pull_request_target.branches).toEqual(["aidan/provider-e2e-crowdin-ai-base"]);
+  expect(workflow.on).toEqual({ push: { branches: ["aidan/crowdin-ai-recording-02"] } });
   expect(workflow.permissions).toEqual({ contents: "read", "pull-requests": "read" });
   const steps = workflow.jobs["crowdin-ai-delivery"].steps;
   const checkouts = steps.filter((step) => step.uses?.startsWith("actions/checkout@"));
   expect(checkouts).toHaveLength(1);
   expect(checkouts[0].with).toMatchObject({
-    ref: "${{ github.event.pull_request.base.sha }}",
+    ref: "${{ github.sha }}",
+    "fetch-depth": 0,
     "persist-credentials": false,
   });
   expect(
@@ -348,7 +352,7 @@ it("posts status only for the triggered head and rejects a stale success", () =>
   const status = {
     event: input.event,
     currentPr: input.currentPr,
-    trustedHead: baseHead,
+    trustedHead: trustedTaskHead,
     mode: "complete",
     verifyResult: "success",
     pendingResult: "success",
@@ -374,8 +378,12 @@ it("posts status only for the triggered head and rejects a stale success", () =>
   const changedBase = structuredClone(status);
   changedBase.currentPr.base.sha = "3".repeat(40);
   expect(createCrowdinAiStatus(changedBase).body.state).toBe("failure");
+  const wrongNumber = structuredClone(status);
+  wrongNumber.currentPr.number = 27;
+  expect(createCrowdinAiStatus(wrongNumber).body.state).toBe("failure");
+  expect(() => verifyCrowdinAiDelivery({ ...input, currentPr: wrongNumber.currentPr })).toThrow();
   const foreign = structuredClone(status);
-  foreign.event.pull_request.head.repo.full_name = "other/repo";
+  foreign.event.repository.full_name = "other/repo";
   expect(() => createCrowdinAiStatus(foreign)).toThrow();
   expect(() => createCrowdinAiStatus({ ...status, trustedHead: "3".repeat(40) })).toThrow();
 });

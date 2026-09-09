@@ -5,6 +5,11 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createCrowdinAiBaseline, stageCrowdinAiCandidate } from "./crowdin-ai-cycle.mjs";
+import {
+  deliveryScope,
+  validateCrowdinPush,
+  validatePinnedCrowdinPr,
+} from "./crowdin-ai-delivery-status.mjs";
 import { nativeScope } from "./crowdin-ai-native-read.mjs";
 import { finalizeCrowdinAiReview } from "./crowdin-ai-review-evidence.mjs";
 
@@ -22,26 +27,6 @@ function equal(actual, expected, message) {
   requireValue(JSON.stringify(actual) === JSON.stringify(expected), message);
 }
 
-function validatePr(pr) {
-  requireValue(Number.isSafeInteger(pr?.number) && pr.number > 0, "Invalid PR number");
-  requireValue(pr.state === "open" && pr.draft === false, "PR must be open and ready");
-  requireValue(
-    pr.base?.repo?.full_name === nativeScope.repository &&
-      pr.head?.repo?.full_name === nativeScope.repository,
-    "Only same-repository PRs are allowed",
-  );
-  requireValue(
-    pr.base.ref === baseBranch &&
-      /^aidan\/crowdin-ai-candidate-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(pr.head.ref),
-    "Wrong PR branch",
-  );
-  requireValue(
-    shaPattern.test(pr.base.sha) && shaPattern.test(pr.head.sha) && pr.base.sha !== pr.head.sha,
-    "Invalid PR heads",
-  );
-  return { number: pr.number, base: pr.base.sha, head: pr.head.sha, branch: pr.head.ref };
-}
-
 export function verifyCrowdinAiDelivery(input) {
   const {
     event,
@@ -54,16 +39,20 @@ export function verifyCrowdinAiDelivery(input) {
     baseTree,
     candidateTree,
     targetPo,
-    capture,
+    captureText,
     nativeSnapshot,
     now,
   } = input;
-  requireValue(event?.repository?.full_name === nativeScope.repository, "Wrong event repository");
-  const expected = validatePr(event.pull_request);
-  equal(event.number, expected.number, "Event PR number differs");
-  equal(validatePr(currentPr), expected, "PR changed since trigger");
-  equal(trustedHead, expected.base, "Trusted checkout differs from PR base");
+  validateCrowdinPush(event, trustedHead);
+  validatePinnedCrowdinPr(currentPr);
+  const expected = {
+    number: deliveryScope.number,
+    base: deliveryScope.baseSha,
+    head: deliveryScope.headSha,
+    branch: deliveryScope.headBranch,
+  };
   equal(mergeBase, expected.base, "PR must descend from exact base");
+  const capture = JSON.parse(captureText);
   const age = Date.parse(now) - Date.parse(nativeSnapshot?.completedAt);
   requireValue(
     Number.isFinite(age) && age >= 0 && age <= 300000,
@@ -79,7 +68,7 @@ export function verifyCrowdinAiDelivery(input) {
     repository: nativeScope.repository,
     baseBranch,
     candidateBranch: expected.branch,
-    baseHead: trustedHead,
+    baseHead: expected.base,
     baseTreeOid,
     pinnedSourceHead: "96bbb4619507225bf663b44b221ded24b95f9777",
     projectSlug: nativeScope.projectSlug,
@@ -94,8 +83,17 @@ export function verifyCrowdinAiDelivery(input) {
   };
   const baseline = createCrowdinAiBaseline({
     manifest,
-    current: { head: trustedHead, sourcePo, targetPo: baselineTargetPo, tree: baseTree },
+    current: { head: expected.base, sourcePo, targetPo: baselineTargetPo, tree: baseTree },
   });
+  const captureBlob = createHash("sha1")
+    .update(`blob ${Buffer.byteLength(captureText)}\0`)
+    .update(captureText)
+    .digest("hex");
+  const captureEntry = baseline.current.tree.find((entry) => entry.path === capturePath);
+  requireValue(
+    captureEntry?.mode === "100644" && captureEntry.oid === captureBlob,
+    "Capture is not the exact pinned base blob",
+  );
   const candidate = stageCrowdinAiCandidate({
     baseline,
     expectedManifestDigest: baseline.manifestDigest,
@@ -123,7 +121,8 @@ export function verifyCrowdinAiDelivery(input) {
     status: "candidate-verified",
     repository: nativeScope.repository,
     number: expected.number,
-    baseSha: trustedHead,
+    baseSha: expected.base,
+    trustedTaskSha: trustedHead,
     headSha: expected.head,
     candidateDigest: candidate.digest,
     captureDigest: capture.digest,
@@ -180,22 +179,28 @@ async function readBounded(path) {
 
 export async function runCrowdinAiDelivery() {
   requireValue(
-    process.env.GITHUB_EVENT_NAME === "pull_request_target" &&
+    process.env.GITHUB_EVENT_NAME === "push" &&
       process.env.GITHUB_REPOSITORY === nativeScope.repository &&
-      process.env.GITHUB_REF === `refs/heads/${baseBranch}`,
+      process.env.GITHUB_REF === deliveryScope.taskRef,
     "Wrong workflow event",
   );
   const event = JSON.parse(await readBounded(process.env.GITHUB_EVENT_PATH));
-  const pr = validatePr(event.pull_request);
+  const pr = {
+    number: deliveryScope.number,
+    base: deliveryScope.baseSha,
+    head: deliveryScope.headSha,
+  };
   const git = (...args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 5000000 });
   const trustedHead = git("rev-parse", "HEAD").trim();
-  equal(trustedHead, pr.base, "Wrong trusted checkout");
+  validateCrowdinPush(event, trustedHead);
+  equal(process.env.GITHUB_SHA, event.after, "Push SHA differs");
   const repositoryPath = `/repos/${nativeScope.repository}`;
   const [currentPr, comparison, remoteTree] = await Promise.all([
     githubRead(`${repositoryPath}/pulls/${pr.number}`),
     githubRead(`${repositoryPath}/compare/${pr.base}...${pr.head}`),
     githubRead(`${repositoryPath}/git/trees/${pr.head}?recursive=1`),
   ]);
+  validatePinnedCrowdinPr(currentPr);
   requireValue(
     remoteTree.truncated === false && Array.isArray(remoteTree.tree),
     "Incomplete candidate tree",
@@ -216,7 +221,7 @@ export async function runCrowdinAiDelivery() {
   const bytes = Buffer.from(blob.content, "base64");
   equal(bytes.length, blob.size, "Catalog blob size differs");
   const targetPo = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  const baseTree = git("ls-tree", "-rz", "HEAD")
+  const baseTree = git("ls-tree", "-rz", deliveryScope.baseSha)
     .split("\0")
     .filter(Boolean)
     .map((record) => {
@@ -224,30 +229,30 @@ export async function runCrowdinAiDelivery() {
       const [mode, , oid] = record.slice(0, index).split(" ");
       return { path: record.slice(index + 1), mode, oid };
     });
-  const [sourcePo, baselineTargetPo, captureText, snapshotText] = await Promise.all([
-    readBounded(sourcePath),
-    readBounded(targetPath),
-    readBounded(capturePath),
-    readBounded(join(process.env.RUNNER_TEMP, "crowdin-ai-delivery-native/snapshot.json")),
-  ]);
+  const sourcePo = git("show", `${deliveryScope.baseSha}:${sourcePath}`);
+  const baselineTargetPo = git("show", `${deliveryScope.baseSha}:${targetPath}`);
+  const captureText = git("show", `${deliveryScope.baseSha}:${capturePath}`);
+  const snapshotText = await readBounded(
+    join(process.env.RUNNER_TEMP, "crowdin-ai-delivery-native/snapshot.json"),
+  );
   const receipt = verifyCrowdinAiDelivery({
     event,
     currentPr,
     trustedHead,
     mergeBase: comparison.merge_base_commit?.sha,
-    baseTreeOid: git("rev-parse", "HEAD^{tree}").trim(),
+    baseTreeOid: git("rev-parse", `${deliveryScope.baseSha}^{tree}`).trim(),
     sourcePo,
     baselineTargetPo,
     baseTree,
     candidateTree,
     targetPo,
-    capture: JSON.parse(captureText),
+    captureText,
     nativeSnapshot: JSON.parse(snapshotText),
     now: new Date().toISOString(),
   });
   equal(
-    validatePr(await githubRead(`${repositoryPath}/pulls/${pr.number}`)),
-    validatePr(currentPr),
+    validatePinnedCrowdinPr(await githubRead(`${repositoryPath}/pulls/${pr.number}`)),
+    validatePinnedCrowdinPr(currentPr),
     "PR changed during verification",
   );
   await writeFile(

@@ -6,12 +6,21 @@ import { fileURLToPath } from "node:url";
 const repository = "aidanaden/jupiter-i18n-translation-pilot";
 const baseBranch = "aidan/provider-e2e-crowdin-ai-base";
 const sha = /^[a-f0-9]{40}$/u;
+export const deliveryScope = Object.freeze({
+  repository,
+  taskRef: "refs/heads/aidan/crowdin-ai-recording-02",
+  number: 26,
+  baseBranch,
+  baseSha: "e317c1d76b0a813954c0f46063047f8f15f1942c",
+  headBranch: "aidan/crowdin-ai-candidate-20260909",
+  headSha: "3f951a5975d9a8d4d59fa747b1cd87bfab022033",
+});
 
 function requireValue(condition) {
   if (!condition) throw new Error("Invalid Crowdin AI status scope or response");
 }
 
-function identity(pr) {
+export function validatePinnedCrowdinPr(pr) {
   requireValue(Number.isSafeInteger(pr?.number) && pr.number > 0);
   requireValue(pr.base?.repo?.full_name === repository && pr.head?.repo?.full_name === repository);
   requireValue(
@@ -19,7 +28,20 @@ function identity(pr) {
       /^aidan\/crowdin-ai-candidate-[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(pr.head.ref),
   );
   requireValue(sha.test(pr.base.sha) && sha.test(pr.head.sha) && pr.base.sha !== pr.head.sha);
+  requireValue(
+    pr.number === deliveryScope.number &&
+      pr.base.sha === deliveryScope.baseSha &&
+      pr.head.sha === deliveryScope.headSha &&
+      pr.head.ref === deliveryScope.headBranch,
+  );
+  requireValue(pr.state === "open" && pr.draft === false);
   return JSON.stringify([pr.number, pr.base.sha, pr.head.sha, pr.head.ref, pr.state, pr.draft]);
+}
+
+export function validateCrowdinPush(event, trustedHead) {
+  requireValue(event?.repository?.full_name === repository && event.ref === deliveryScope.taskRef);
+  requireValue(event.deleted === false && event.forced === false && sha.test(event.after));
+  requireValue(event.head_commit?.id === event.after && trustedHead === event.after);
 }
 
 export function createCrowdinAiStatus({
@@ -31,16 +53,12 @@ export function createCrowdinAiStatus({
   trustedHead,
   runId,
 }) {
-  requireValue(
-    event?.repository?.full_name === repository && event.number === event.pull_request?.number,
-  );
-  const expected = identity(event.pull_request);
-  requireValue(event.pull_request.state === "open" && event.pull_request.draft === false);
-  requireValue(trustedHead === event.pull_request.base.sha);
+  validateCrowdinPush(event, trustedHead);
   requireValue(["pending", "complete"].includes(mode) && /^[1-9][0-9]{0,19}$/u.test(runId));
   let currentMatches = false;
   try {
-    currentMatches = identity(currentPr) === expected;
+    validatePinnedCrowdinPr(currentPr);
+    currentMatches = true;
   } catch {
     currentMatches = false;
   }
@@ -53,7 +71,7 @@ export function createCrowdinAiStatus({
         ? "success"
         : "failure";
   return {
-    path: `/repos/${repository}/statuses/${event.pull_request.head.sha}`,
+    path: `/repos/${repository}/statuses/${deliveryScope.headSha}`,
     body: {
       state,
       context: "crowdin-ai-delivery",
@@ -70,14 +88,16 @@ export function createCrowdinAiStatus({
 
 export async function publishCrowdinAiStatus(mode) {
   requireValue(
-    process.env.GITHUB_EVENT_NAME === "pull_request_target" &&
+    process.env.GITHUB_EVENT_NAME === "push" &&
       process.env.GITHUB_REPOSITORY === repository &&
-      process.env.GITHUB_REF === `refs/heads/${baseBranch}`,
+      process.env.GITHUB_REF === deliveryScope.taskRef,
   );
   const text = await readFile(process.env.GITHUB_EVENT_PATH, "utf8");
   requireValue(Buffer.byteLength(text) <= 2000000);
   const event = JSON.parse(text);
-  identity(event.pull_request);
+  const trustedHead = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  validateCrowdinPush(event, trustedHead);
+  requireValue(process.env.GITHUB_SHA === event.after);
   requireValue(process.env.GH_TOKEN);
   const headers = {
     Authorization: `Bearer ${process.env.GH_TOKEN}`,
@@ -87,7 +107,7 @@ export async function publishCrowdinAiStatus(mode) {
   let currentPr;
   try {
     const response = await fetch(
-      `https://api.github.com/repos/${repository}/pulls/${event.pull_request.number}`,
+      `https://api.github.com/repos/${repository}/pulls/${deliveryScope.number}`,
       { headers, redirect: "error", signal: AbortSignal.timeout(30000) },
     );
     requireValue(response.ok && !response.redirected);
@@ -114,7 +134,7 @@ export async function publishCrowdinAiStatus(mode) {
     mode,
     verifyResult: process.env.VERIFY_RESULT,
     pendingResult: process.env.PENDING_RESULT,
-    trustedHead: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+    trustedHead,
     runId: process.env.GITHUB_RUN_ID,
   });
   const response = await fetch(`https://api.github.com${request.path}`, {
