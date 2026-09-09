@@ -118,9 +118,9 @@ it("passes an exact 13-message candidate bound to current native approval record
   });
 });
 
-it("pins the integrated repair base and candidate without changing source, target or saved capture", () => {
-  expect(deliveryScope.baseSha).toBe("2e476be7ab29563470a358d8a1ddbffe05034f17");
-  expect(deliveryScope.headSha).toBe("148bcfc4cae92ab35563164de59b382c75384803");
+it("pins the stable repair base and candidate without changing source, translations or saved capture", () => {
+  expect(deliveryScope.baseSha).toBe("c148ebe261217175338db858ef77671633689e77");
+  expect(deliveryScope.headSha).toBe("45d3909a18dc71fef6111b9bceb77ae61621605b");
   expect(sourcePo).toBe(git("show", `e317c1d76b0a813954c0f46063047f8f15f1942c:${sourcePath}`));
   expect(captureText).toBe(
     git(
@@ -128,13 +128,44 @@ it("pins the integrated repair base and candidate without changing source, targe
       "e317c1d76b0a813954c0f46063047f8f15f1942c:scripts/provider-e2e/crowdin-ai-review-capture.json",
     ),
   );
-  expect(git("show", `${headSha}:${targetPath}`)).toBe(
-    git("show", `3f951a5975d9a8d4d59fa747b1cd87bfab022033:${targetPath}`),
+  expect(po.parse(git("show", `${headSha}:${targetPath}`))).toEqual(
+    po.parse(git("show", `3f951a5975d9a8d4d59fa747b1cd87bfab022033:${targetPath}`)),
   );
+  expect(git("show", `${headSha}:${targetPath}`)).toBe(targetPo);
   const old = structuredClone(input);
   old.currentPr.base.sha = "e317c1d76b0a813954c0f46063047f8f15f1942c";
   old.currentPr.head.sha = "3f951a5975d9a8d4d59fa747b1cd87bfab022033";
   expect(() => verifyCrowdinAiDelivery(old)).toThrow();
+  old.currentPr.base.sha = "2e476be7ab29563470a358d8a1ddbffe05034f17";
+  old.currentPr.head.sha = "148bcfc4cae92ab35563164de59b382c75384803";
+  expect(() => verifyCrowdinAiDelivery(old)).toThrow();
+});
+
+it("verifies the actual candidate commit and complete tree against the fixed base", () => {
+  const candidateTree = git("ls-tree", "-rz", headSha)
+    .split("\0")
+    .filter(Boolean)
+    .map((record) => {
+      const [details, path] = record.split("\t");
+      const [mode, , oid] = details.split(" ");
+      return { path, mode, oid };
+    });
+  expect(git("merge-base", baseHead, headSha).trim()).toBe(baseHead);
+  expect(git("rev-parse", `${headSha}^{tree}`).trim()).toBe(
+    "fcedf9fc2846731c695a2ebf1eec51e5d953d140",
+  );
+  expect(git("diff", "--name-only", baseHead, headSha).trim()).toBe(targetPath);
+  expect(
+    verifyCrowdinAiDelivery({
+      ...input,
+      candidateTree,
+      targetPo: git("show", `${headSha}:${targetPath}`),
+    }),
+  ).toMatchObject({
+    status: "candidate-verified",
+    headSha,
+    baseSha: baseHead,
+  });
 });
 
 it("accepts the push event shape only on the trusted task ref", () => {

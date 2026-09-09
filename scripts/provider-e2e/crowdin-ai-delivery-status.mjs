@@ -11,9 +11,9 @@ export const deliveryScope = Object.freeze({
   taskRef: "refs/heads/aidan/crowdin-ai-recording-02",
   number: 26,
   baseBranch,
-  baseSha: "2e476be7ab29563470a358d8a1ddbffe05034f17",
+  baseSha: "c148ebe261217175338db858ef77671633689e77",
   headBranch: "aidan/crowdin-ai-candidate-20260909",
-  headSha: "148bcfc4cae92ab35563164de59b382c75384803",
+  headSha: "45d3909a18dc71fef6111b9bceb77ae61621605b",
 });
 
 function requireValue(condition) {
