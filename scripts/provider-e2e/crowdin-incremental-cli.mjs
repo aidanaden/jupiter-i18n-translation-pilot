@@ -103,7 +103,24 @@ export async function runIncrementalCli(args, { runCommand = execFileSync } = {}
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runIncrementalCli(process.argv.slice(2)).catch(() => {
+  runIncrementalCli(process.argv.slice(2)).catch((error) => {
+    const safeMessages = new Set([
+      "Native read refused",
+      "Wrong native file",
+      "Wrong integration branch",
+      "Wrong directory chain",
+      "Unexpected parent directory",
+      "Wrong source scope",
+      "Native state changed between reads",
+      "Corrected translation differs from test review",
+      "Approval does not match corrected translation and reviewer",
+      "One current translation and approval are required",
+      "Native source changed",
+      "Invalid native ID",
+      "Native source identifiers differ",
+      "Approval or correction predates source, or is in the future",
+    ]);
+    if (safeMessages.has(error?.message)) process.stderr.write(`Check failed: ${error.message}.\n`);
     process.stderr.write(
       "Incremental preparation failed. No authorization was issued. Check inputs and access without logging credentials.\n",
     );
