@@ -57,7 +57,7 @@ msgstr "检查兑换"
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
 #: src/i18n/messages.ts:
 msgid "pilot.recording.proof"
-msgstr "翻译排练完成"
+msgstr "源文本更新后，AI 翻译会自动开始"
 
 #. Sandbox-only empty state shown without a network request.
 #: src/i18n/messages.ts:
