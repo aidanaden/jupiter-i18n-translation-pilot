@@ -295,3 +295,18 @@ test("workflow isolates trusted code, native access, and the exact-head status",
     "node scripts/provider-e2e/crowdin-incremental-check.mjs",
   ]);
 });
+
+test("a repeat clears earlier success before a changed live base can fail", async () => {
+  const f = fixture();
+  let status = "success";
+  const run = f.options.runCommand;
+  f.options.runCommand = (name, args) => {
+    const state = args.find((arg) => arg.startsWith("state="));
+    if (state) status = state.slice(6);
+    return run(name, args);
+  };
+  f.data[`/git/ref/heads/${incrementalScope.baseBranch}`].object.sha = "7".repeat(40);
+  await expect(runIncrementalCheck(f.options)).rejects.toThrow();
+  expect(status).toBe("pending");
+  expect(f.nativeCalls()).toBe(0);
+});

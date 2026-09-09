@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import * as z from "zod/v4-mini";
+
 import { runIncrementalCli } from "./crowdin-incremental-cli.mjs";
 import { incrementalScope } from "./crowdin-incremental-delivery.mjs";
 
@@ -44,24 +46,29 @@ export async function runIncrementalCheck({
       stdio: ["ignore", "pipe", "pipe"],
     });
   requireValue(command("git", ["rev-parse", "HEAD"]).trim() === env.GITHUB_SHA);
-  const api = (path) => JSON.parse(command("gh", ["api", `repos/${repository}${path}`]));
+  const api = (path, schema) =>
+    z.parse(schema, JSON.parse(command("gh", ["api", `repos/${repository}${path}`])));
   function checkHeads() {
-    const pr = api(`/pulls/${checkScope.number}`);
-    requireValue(
-      pr.number === checkScope.number &&
-        pr.state === "open" &&
-        pr.draft === false &&
-        pr.base?.repo?.full_name === repository &&
-        pr.head?.repo?.full_name === repository &&
-        pr.base.ref === incrementalScope.baseBranch &&
-        pr.head.ref === checkScope.headBranch &&
-        pr.head.sha === incrementalScope.candidateSha,
+    const repo = z.object({ full_name: z.literal(repository) });
+    api(
+      `/pulls/${checkScope.number}`,
+      z.object({
+        number: z.literal(checkScope.number),
+        state: z.literal("open"),
+        draft: z.literal(false),
+        base: z.object({ ref: z.literal(incrementalScope.baseBranch), repo }),
+        head: z.object({
+          ref: z.literal(checkScope.headBranch),
+          sha: z.literal(incrementalScope.candidateSha),
+          repo,
+        }),
+      }),
     );
-    requireValue(
-      api(`/git/ref/heads/${incrementalScope.baseBranch}`).object?.sha === checkScope.baseSha,
+    api(
+      `/git/ref/heads/${incrementalScope.baseBranch}`,
+      z.object({ object: z.object({ sha: z.literal(checkScope.baseSha) }) }),
     );
   }
-  checkHeads();
   command("gh", [
     "api",
     `repos/${repository}/statuses/${incrementalScope.candidateSha}`,
@@ -74,32 +81,46 @@ export async function runIncrementalCheck({
     "-f",
     "description=Checking exact PR32 candidate and current Crowdin approval",
   ]);
-  const run = api(`/actions/runs/${checkScope.runId}`);
-  const job = api(`/actions/jobs/${checkScope.jobId}`);
-  const check = api(`/check-runs/${checkScope.jobId}`);
-  requireValue(
-    run.id === checkScope.runId &&
-      run.run_attempt === 1 &&
-      run.head_branch === checkScope.headBranch &&
-      run.path === ".github/workflows/ci.yml" &&
-      run.event === "pull_request" &&
-      run.check_suite_id === checkScope.suiteId &&
-      job.id === checkScope.jobId &&
-      job.run_id === checkScope.runId &&
-      job.name === "verify" &&
-      job.check_run_url ===
-        `https://api.github.com/repos/${repository}/check-runs/${checkScope.jobId}` &&
-      check.id === checkScope.jobId &&
-      check.name === "verify" &&
-      check.app?.id === 15368 &&
-      check.check_suite?.id === checkScope.suiteId,
+  checkHeads();
+  const completed = {
+    head_sha: z.literal(incrementalScope.candidateSha),
+    status: z.literal("completed"),
+    conclusion: z.literal("success"),
+  };
+  api(
+    `/actions/runs/${checkScope.runId}`,
+    z.object({
+      ...completed,
+      id: z.literal(checkScope.runId),
+      run_attempt: z.literal(1),
+      head_branch: z.literal(checkScope.headBranch),
+      path: z.literal(".github/workflows/ci.yml"),
+      event: z.literal("pull_request"),
+      check_suite_id: z.literal(checkScope.suiteId),
+    }),
   );
-  for (const item of [run, job, check])
-    requireValue(
-      item.head_sha === incrementalScope.candidateSha &&
-        item.status === "completed" &&
-        item.conclusion === "success",
-    );
+  api(
+    `/actions/jobs/${checkScope.jobId}`,
+    z.object({
+      ...completed,
+      id: z.literal(checkScope.jobId),
+      run_id: z.literal(checkScope.runId),
+      name: z.literal("verify"),
+      check_run_url: z.literal(
+        `https://api.github.com/repos/${repository}/check-runs/${checkScope.jobId}`,
+      ),
+    }),
+  );
+  api(
+    `/check-runs/${checkScope.jobId}`,
+    z.object({
+      ...completed,
+      id: z.literal(checkScope.jobId),
+      name: z.literal("verify"),
+      app: z.object({ id: z.literal(15368) }),
+      check_suite: z.object({ id: z.literal(checkScope.suiteId) }),
+    }),
+  );
   command("git", [
     "fetch",
     "--no-tags",
