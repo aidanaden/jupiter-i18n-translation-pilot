@@ -57,7 +57,7 @@ function mockApi(change = () => {}) {
       "/languages/zh-CN/translations": [
         {
           stringId: 104,
-          contentType: "text",
+          contentType: "text/plain",
           translationId: 900,
           text: "源文本更新后，AI 翻译会自动开始",
           user: { id: 17853021 },
