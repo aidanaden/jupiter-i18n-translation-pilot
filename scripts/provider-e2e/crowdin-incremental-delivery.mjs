@@ -113,7 +113,7 @@ function validateNativeState(state, source, end) {
       entry.projectId !== incrementalScope.projectId ||
       entry.fileId !== incrementalScope.fileId ||
       entry.text !== source[entry.identifier]?.translation ||
-      entry.revision !== 1
+      entry.revision !== incrementalScope.fileRevision
     )
       throw new NativeSourceMismatchError(entry, source[entry.identifier]?.translation);
     const created = time(entry.createdAt);

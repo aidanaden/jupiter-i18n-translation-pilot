@@ -49,7 +49,7 @@ function mockApi(change = () => {}) {
           fileId: 26,
           identifier: "pilot.recording.proof",
           text: "AI translation starts after a source update",
-          revision: 1,
+          revision: 2,
           createdAt: "2026-09-09T21:00:00Z",
           updatedAt: null,
         },

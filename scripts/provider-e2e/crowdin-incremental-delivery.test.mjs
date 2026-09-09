@@ -50,7 +50,7 @@ function input() {
       fileId: 26,
       identifier,
       text: entry.translation,
-      revision: 1,
+      revision: 2,
       createdAt: "2026-09-09T21:00:00Z",
       updatedAt: null,
     }),
@@ -243,9 +243,15 @@ test.each([
     },
   ],
   [
+    "older source revision",
+    (state) => {
+      state.strings.find((entry) => entry.identifier === "pilot.recording.proof").revision = 1;
+    },
+  ],
+  [
     "later source revision",
     (state) => {
-      state.strings.find((entry) => entry.identifier === "pilot.recording.proof").revision = 2;
+      state.strings.find((entry) => entry.identifier === "pilot.recording.proof").revision = 3;
     },
   ],
   [
