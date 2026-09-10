@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 import { expect, test, vi } from "vitest";
 import { formatter } from "@lingui/format-po";
+import { parse } from "yaml";
 
 import { prepareIncrementalDelivery } from "./crowdin-incremental-delivery.mjs";
 import { collectIncrementalSnapshot } from "./crowdin-incremental-read.mjs";
@@ -134,6 +136,65 @@ test("makes two bounded read-only observations with no secret in the snapshot", 
   expect(api.paths.join(" ")).not.toMatch(/files\/14|fileId=14|pre-translation|builds/);
 });
 
+test("observes a later stable revision without granting delivery", async () => {
+  const api = mockApi(({ path, body }) => {
+    if (path === "/files/26") body.data.revisionId = 4;
+  });
+  const snapshot = await collectIncrementalSnapshot({
+    token: "synthetic-test-token",
+    fetchImpl: api.fetchImpl,
+  });
+  expect(snapshot.first.file.revisionId).toBe(4);
+  expect(snapshot).not.toHaveProperty("deliveryAllowed", true);
+  expect(snapshot).not.toHaveProperty("mergeAllowed", true);
+});
+
+test.each([0, null, -1, 1.5, "4"])("rejects invalid file revision %s", async (revision) => {
+  const api = mockApi(({ path, body }) => {
+    if (path === "/files/26") body.data.revisionId = revision;
+  });
+  await expect(
+    collectIncrementalSnapshot({ token: "synthetic-test-token", fetchImpl: api.fetchImpl }),
+  ).rejects.toThrow();
+});
+
+test("observation workflow has no mutation or status permission", () => {
+  const workflow = parse(
+    readFileSync(".github/workflows/crowdin-incremental-evidence.yml", "utf8"),
+  );
+  expect(workflow.on).toEqual({
+    push: { branches: ["codex/crowdin-realistic-delivery-20260911"] },
+  });
+  expect(workflow.permissions).toEqual({ contents: "read" });
+  expect(workflow.jobs.collect.steps.filter((step) => step.run).map((step) => step.run)).toEqual([
+    "pnpm install --frozen-lockfile --ignore-scripts",
+    'node scripts/provider-e2e/crowdin-realistic-observe.mjs "$RUNNER_TEMP/crowdin-incremental-evidence"',
+  ]);
+});
+
+test("observer rejects wrong workflow context without printing credentials", () => {
+  let stderr = "";
+  try {
+    execFileSync(
+      process.execPath,
+      ["scripts/provider-e2e/crowdin-realistic-observe.mjs", "/tmp/not-created"],
+      {
+        env: {
+          ...process.env,
+          GITHUB_EVENT_NAME: "pull_request",
+          CROWDIN_PERSONAL_TOKEN: "test-never-print",
+        },
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+  } catch (error) {
+    expect(error.status).toBe(1);
+    stderr = String(error.stderr);
+  }
+  expect(stderr).toContain("No delivery authorization was issued");
+  expect(stderr).not.toContain("test-never-print");
+});
+
 test.each([
   ["HTTP refusal", () => new Response("secret must not reach an artifact", { status: 403 })],
   ["redirect", () => ({ ok: true, redirected: true })],
@@ -146,9 +207,9 @@ test.each([
     },
   ],
   [
-    "revision drift",
-    ({ path, body }) => {
-      if (path === "/files/26") body.data.revisionId = 3;
+    "revision drift between observations",
+    ({ path, body, call }) => {
+      if (path === "/files/26" && call > 10) body.data.revisionId = 3;
     },
   ],
   [

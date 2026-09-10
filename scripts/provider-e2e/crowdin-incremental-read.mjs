@@ -76,15 +76,14 @@ export async function collectIncrementalSnapshot({
     if (
       rawFile?.id !== incrementalScope.fileId ||
       rawFile.projectId !== incrementalScope.projectId ||
-      rawFile.name !== "messages.po" ||
-      rawFile.revisionId !== incrementalScope.fileRevision
+      rawFile.name !== "messages.po"
     )
       throw new Error("Wrong native file");
     const file = {
       id: rawFile.id,
       projectId: rawFile.projectId,
       name: rawFile.name,
-      revisionId: rawFile.revisionId,
+      revisionId: nativeId(rawFile.revisionId),
       branchId: nativeId(rawFile.branchId),
       directoryId: nativeId(rawFile.directoryId),
     };

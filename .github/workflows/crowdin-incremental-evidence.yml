@@ -1,16 +1,16 @@
-name: Crowdin incremental read-only evidence
+name: Crowdin realistic read-only evidence
 
 on:
   push:
     branches:
-      - aidan/crowdin-incremental-delivery-20260910
+      - codex/crowdin-realistic-delivery-20260911
 
 permissions:
   contents: read
 
 jobs:
   collect:
-    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/aidan/crowdin-incremental-delivery-20260910'
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.ref == 'refs/heads/codex/crowdin-realistic-delivery-20260911'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -24,8 +24,8 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Read current file26 approval and prepare exact one-message export
-        run: node scripts/provider-e2e/crowdin-incremental-cli.mjs prepare "$RUNNER_TEMP/crowdin-incremental-evidence"
+      - name: Observe current file26 without source sync, AI, review, or delivery
+        run: node scripts/provider-e2e/crowdin-realistic-observe.mjs "$RUNNER_TEMP/crowdin-incremental-evidence"
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_AI_RECORDING_TOKEN }}
           GH_TOKEN: ${{ github.token }}
