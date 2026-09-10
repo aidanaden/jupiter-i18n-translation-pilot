@@ -7,6 +7,9 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  checks: read
+  pull-requests: read
 
 jobs:
   prepare:
@@ -23,7 +26,7 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Prepare reviewed candidate without delivery authority
+      - name: Verify PR 35 and native review without delivery authority
         env:
           GH_TOKEN: ${{ github.token }}
           CROWDIN_PRIVATE_RECORDING_TOKEN: ${{ secrets.CROWDIN_PRIVATE_RECORDING_TOKEN }}

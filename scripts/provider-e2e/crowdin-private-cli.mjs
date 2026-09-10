@@ -6,12 +6,18 @@ import { promisify } from "node:util";
 
 import * as z from "zod/v4-mini";
 
-import { preparePrivateCandidate } from "./crowdin-private-candidate.mjs";
+import { preparePrivateCandidate, verifyPrivateCandidate } from "./crowdin-private-candidate.mjs";
+import {
+  privateBaseSha,
+  readPrivatePullRequest,
+  readPrivateCi,
+  readPrivateTrees,
+} from "./crowdin-private-live.mjs";
 import { collectPrivateReviewSnapshot } from "./crowdin-private-review-read.mjs";
 
 const repository = "aidanaden/jupiter-i18n-translation-pilot";
 const ref = "refs/heads/aidan/crowdin-private-delivery-20260911";
-const baseSha = "7e34abda50fe07b3cd3c01c0787d4bf71c6e8076";
+const baseSha = privateBaseSha;
 
 export async function runPrivatePreparation({
   env = process.env,
@@ -26,6 +32,7 @@ export async function runPrivatePreparation({
   fetchImpl = fetch,
   now = () => new Date().toISOString(),
   outputDir,
+  verifyLive = false,
 }) {
   if (
     env.GITHUB_ACTIONS !== "true" ||
@@ -67,6 +74,8 @@ export async function runPrivatePreparation({
       ])
     ).trim();
   if ((await remoteBase()) !== baseSha) throw new Error("Source base moved");
+  const pullRequest = verifyLive ? await readPrivatePullRequest(command) : undefined;
+  const ci = verifyLive ? await readPrivateCi(command) : undefined;
   await command("git", [
     "fetch",
     "--no-tags",
@@ -79,15 +88,46 @@ export async function runPrivatePreparation({
     "show",
     `${baseSha}:src/i18n/locales/zh-Hans/messages.po`,
   ]);
+  const trees = verifyLive ? await readPrivateTrees(command, pullRequest) : undefined;
   const evidence = await collectPrivateReviewSnapshot({
     token: env.CROWDIN_PRIVATE_RECORDING_TOKEN,
     fetchImpl,
     now,
   });
   if ((await remoteBase()) !== baseSha) throw new Error("Source base moved");
+  if (verifyLive) {
+    if (JSON.stringify(await readPrivatePullRequest(command)) !== JSON.stringify(pullRequest))
+      throw new Error("Pull request moved");
+    await readPrivateCi(command);
+  }
   evidence.now = now();
   const result = preparePrivateCandidate({ sourcePo, baselineTargetPo, evidence });
   const receipt = { ...result.receipt, baseSha, trustedSha: env.GITHUB_SHA, repository };
+  if (verifyLive) {
+    Object.assign(
+      receipt,
+      verifyPrivateCandidate({
+        sourcePo,
+        baselineTargetPo,
+        evidence,
+        ...trees,
+        repository,
+        baseBranch: pullRequest.base.ref,
+        baseSha,
+        currentBaseSha: baseSha,
+        headSha: pullRequest.head.sha,
+      }),
+      {
+        status: "live-candidate-verified",
+        liveVerificationPerformed: true,
+        pullRequestNumber: pullRequest.number,
+        mergeCommitSha: pullRequest.merge_commit_sha,
+        ci,
+        verifiedAt: evidence.now,
+        recheckRequiredBeforeDelivery: true,
+      },
+    );
+  }
   await mkdir(outputDir, { mode: 0o700 });
   for (const [name, value] of [
     ["candidate.po", result.candidatePo],
@@ -101,6 +141,7 @@ export async function runPrivatePreparation({
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runPrivatePreparation({
+    verifyLive: true,
     outputDir: process.argv.length === 3 ? process.argv[2] : undefined,
   }).catch(() => {
     process.stderr.write("Private preparation refused. No delivery was authorized.\n");

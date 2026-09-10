@@ -9,7 +9,7 @@ import { parse } from "yaml";
 import { runPrivatePreparation } from "./crowdin-private-cli.mjs";
 
 const sha = "a".repeat(40);
-const base = "7e34abda50fe07b3cd3c01c0787d4bf71c6e8076";
+const base = "be101fae90c42554de45deb5393b19771aa1318f";
 function nativeApi() {
   const labels = [
     ["balance", "Balance {balance}", "余额 {balance}"],
@@ -129,6 +129,153 @@ it("writes only a private candidate, native evidence, and a receipt with no deli
   });
 });
 
+it("live mode refuses a wrong PR before native reads", async () => {
+  const input = inputs(join(await mkdtemp(join(tmpdir(), "private-live-test-")), "output"));
+  input.verifyLive = true;
+  const command = input.command;
+  input.command = (program, args) =>
+    args.at(-1).endsWith("pulls/35") ? "{}" : command(program, args);
+  input.fetchImpl = () => {
+    throw new Error("Native read occurred");
+  };
+  await expect(runPrivatePreparation(input)).rejects.not.toThrow("Native read occurred");
+});
+
+function liveInputs(outputDir) {
+  const input = inputs(outputDir);
+  const command = input.command;
+  const head = "93265e70610667a782e52a20d2de495e52e20ed3";
+  const repository = "aidanaden/jupiter-i18n-translation-pilot";
+  const baseRef = {
+    sha: base,
+    ref: "aidan/crowdin-private-source-20260911",
+    repo: { full_name: repository, id: 1347944533 },
+  };
+  const headRef = {
+    sha: head,
+    ref: "aidan/crowdin-private-candidate-20260911",
+    repo: { full_name: repository, id: 1347944533 },
+  };
+  input.verifyLive = true;
+  input.command = async (program, args) => {
+    const path = args.at(-1);
+    if (program === "gh" && path.endsWith("pulls/35"))
+      return JSON.stringify({
+        number: 35,
+        state: "open",
+        merged: false,
+        draft: false,
+        base: baseRef,
+        head: headRef,
+        merge_commit_sha: "ae3e5c787ddd7c0d6135ce74afe7a39e83b8a0cf",
+      });
+    if (program === "gh" && path.includes("actions/runs"))
+      return JSON.stringify({
+        id: 34522536375,
+        head_sha: head,
+        event: "pull_request",
+        path: ".github/workflows/ci.yml",
+        head_branch: headRef.ref,
+        check_suite_id: 93523623013,
+        status: "completed",
+        conclusion: "success",
+        repository: { full_name: repository },
+        pull_requests: [{ number: 35, base: baseRef, head: headRef }],
+      });
+    if (program === "gh" && path.includes("check-runs"))
+      return JSON.stringify({
+        total_count: 1,
+        check_runs: [
+          {
+            id: 103023298309,
+            name: "verify",
+            head_sha: head,
+            app: { id: 15368, slug: "github-actions" },
+            status: "completed",
+            conclusion: "success",
+            check_suite: { id: 93523623013 },
+            details_url: `https://github.com/${repository}/actions/runs/34522536375/job/103023298309`,
+          },
+        ],
+      });
+    if (program === "git" && ["ls-tree", "merge-base"].includes(args[0]))
+      return execFileSync(program, args, { encoding: "utf8" });
+    return command(program, args);
+  };
+  return input;
+}
+
+it("verifies the real complete candidate Git tree with fresh native review and bound CI", async () => {
+  const outputDir = join(await mkdtemp(join(tmpdir(), "private-live-test-")), "output");
+  const receipt = await runPrivatePreparation(liveInputs(outputDir));
+  expect(receipt).toMatchObject({
+    status: "live-candidate-verified",
+    liveVerificationPerformed: true,
+    headSha: "93265e70610667a782e52a20d2de495e52e20ed3",
+    baseSha: base,
+    pullRequestNumber: 35,
+    deliveryAllowed: false,
+    mergeAllowed: false,
+    deploymentAllowed: false,
+    atomicSnapshot: false,
+    approvalTimeContentProved: false,
+    recheckRequiredBeforeDelivery: true,
+    ci: { runId: 34522536375 },
+  });
+});
+
+it.each([
+  "moved PR",
+  "unrelated tree",
+  "stale evidence",
+  "failed CI",
+  "wrong CI head",
+  "old CI base",
+  "missing check",
+  "fake check app",
+  "second CI failed",
+])("live verification writes no receipt for %s", async (failure) => {
+  const outputDir = join(await mkdtemp(join(tmpdir(), "private-live-test-")), "output");
+  const input = liveInputs(outputDir);
+  const command = input.command;
+  let prReads = 0;
+  let ciReads = 0;
+  input.command = async (program, args) => {
+    const result = await command(program, args);
+    const path = args.at(-1);
+    if (program === "gh" && path.endsWith("pulls/35")) {
+      prReads += 1;
+      if (failure === "moved PR" && prReads === 2)
+        return JSON.stringify({ ...JSON.parse(result), merge_commit_sha: "b".repeat(40) });
+    }
+    if (program === "gh" && path.includes("actions/runs")) {
+      ciReads += 1;
+      const run = JSON.parse(result);
+      if (failure === "failed CI" || (failure === "second CI failed" && ciReads === 2))
+        run.conclusion = "failure";
+      if (failure === "wrong CI head") run.head_sha = "b".repeat(40);
+      if (failure === "old CI base") run.pull_requests[0].base.sha = "b".repeat(40);
+      return JSON.stringify(run);
+    }
+    if (program === "gh" && path.includes("check-runs")) {
+      const value = JSON.parse(result);
+      if (failure === "missing check") {
+        value.total_count = 0;
+        value.check_runs = [];
+      }
+      if (failure === "fake check app") value.check_runs[0].app.id = 123;
+      return JSON.stringify(value);
+    }
+    if (failure === "unrelated tree" && args[0] === "ls-tree" && path.startsWith("93265"))
+      return result + `100644 blob ${"b".repeat(40)}\textra.txt\0`;
+    return result;
+  };
+  input.now = () =>
+    failure === "stale evidence" && prReads === 2 ? "2026-09-11T02:00:00Z" : "2026-09-11T01:03:00Z";
+  await expect(runPrivatePreparation(input)).rejects.toThrow();
+  await expect(stat(outputDir)).rejects.toThrow();
+});
+
 it.each(["base movement", "stale clock", "missing approval"])(
   "writes no output after %s",
   async (failure) => {
@@ -169,7 +316,12 @@ it("limits workflow execution to one trusted push branch with read-only authorit
     ),
   );
   expect(workflow.on).toEqual({ push: { branches: ["aidan/crowdin-private-delivery-20260911"] } });
-  expect(workflow.permissions).toEqual({ contents: "read" });
+  expect(workflow.permissions).toEqual({
+    contents: "read",
+    actions: "read",
+    checks: "read",
+    "pull-requests": "read",
+  });
   expect(Object.keys(workflow.jobs)).toEqual(["prepare"]);
   const job = workflow.jobs.prepare;
   expect(job["timeout-minutes"]).toBe(10);

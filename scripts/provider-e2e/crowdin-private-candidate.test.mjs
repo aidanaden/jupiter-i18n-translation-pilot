@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { preparePrivateCandidate, verifyPrivateCandidate } from "./crowdin-private-candidate.mjs";
 
-const baseSha = "7e34abda50fe07b3cd3c01c0787d4bf71c6e8076";
+const baseSha = "be101fae90c42554de45deb5393b19771aa1318f";
 const sourcePo = execFileSync("git", ["show", `${baseSha}:src/i18n/locales/en/messages.po`], {
   encoding: "utf8",
 });

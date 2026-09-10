@@ -97,7 +97,7 @@ export function verifyPrivateCandidate(input) {
     throw new Error("Wrong repository or base branch");
   }
   if (
-    baseSha !== "7e34abda50fe07b3cd3c01c0787d4bf71c6e8076" ||
+    baseSha !== "be101fae90c42554de45deb5393b19771aa1318f" ||
     currentBaseSha !== baseSha ||
     mergeBase !== baseSha ||
     !z.safeParse(z.string().check(z.regex(/^[a-f0-9]{40}$/u)), headSha).success ||
