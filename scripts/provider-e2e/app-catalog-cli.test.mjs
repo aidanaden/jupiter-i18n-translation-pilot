@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,7 +23,24 @@ const run = (...args) =>
   );
 
 it("prepares and stages only new private scratch artifacts, retaining the exact raw bytes", async () => {
-  const outputs = [];
+  const inputDirectory = await mkdtemp(join(tmpdir(), "lingo-pinned-cli-test-"));
+  const outputs = [inputDirectory];
+  const source = join(inputDirectory, "en.po");
+  const baseline = join(inputDirectory, "zh-Hans.po");
+  for (const [locale, path] of [
+    ["en", source],
+    ["zh-Hans", baseline],
+  ]) {
+    const content = execFileSync(
+      "git",
+      ["show", `${head}:src/i18n/locales/${locale}/messages.po`],
+      {
+        cwd: new URL("../../", import.meta.url),
+        encoding: "utf8",
+      },
+    );
+    await writeFile(path, content, { flag: "wx", mode: 0o600 });
+  }
   const original = await readFile(baseline, "utf8");
   try {
     const prepared = run("prepare", source, baseline, head);

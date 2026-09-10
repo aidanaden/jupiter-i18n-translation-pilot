@@ -65,6 +65,48 @@ export const REVIEW_SWAP_MESSAGE = /* i18n */ {
   message: "Review swap",
 };
 
+export const SWAP_PAY_MESSAGE = /* i18n */ {
+  comment:
+    "Swap form label above the token amount the user will spend. Token symbols and amounts are rendered separately and must not be translated.",
+  id: "swap.form.pay",
+  message: "You pay",
+};
+
+export const SWAP_RECEIVE_MESSAGE = /* i18n */ {
+  comment:
+    "Swap form label above the quoted token amount the user will receive. This is a quote, not a guaranteed amount.",
+  id: "swap.form.receive",
+  message: "You receive",
+};
+
+export const SWAP_BALANCE_MESSAGE = /* i18n */ {
+  comment:
+    "Available token balance beside a swap input. Preserve the {balance} placeholder exactly; it is a preformatted amount, not text to translate.",
+  id: "swap.form.balance",
+  message: "Balance {balance}",
+};
+
+export const SWAP_MARKET_MESSAGE = /* i18n */ {
+  comment:
+    "Swap order-type tab for an immediate swap at the current market quote. Market means an order type, not a marketplace.",
+  id: "swap.form.market",
+  message: "Market",
+};
+
+export const SWAP_LIMIT_MESSAGE = /* i18n */ {
+  comment:
+    "Swap order-type tab for an order with a specified execution price. Limit means a limit order, not a spending cap.",
+  id: "swap.form.limit",
+  message: "Limit",
+};
+
+export const SWAP_RECURRING_MESSAGE = /* i18n */ {
+  comment:
+    "Swap order-type tab for repeated scheduled orders. Use the team's preferred term for recurring investment orders.",
+  id: "swap.form.recurring",
+  message: "Recurring",
+};
+
 export const TRANSLATION_REHEARSAL_PROOF_MESSAGE = /* i18n */ {
   comment: "Synthetic proof message used only by the autonomous end-to-end translation rehearsal.",
   id: "pilot.recording.proof",
