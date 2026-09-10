@@ -15,7 +15,7 @@ function syntheticApi(change = () => {}) {
   const sources = labels.map(([key, text], index) => ({
     id: index + 1,
     projectId: 929237,
-    fileId: 24,
+    fileId: 36,
     identifier: `swap.form.${key}`,
     text,
     createdAt: "2026-09-11T01:00:00Z",
@@ -37,15 +37,18 @@ function syntheticApi(change = () => {}) {
       sourceLanguageId: "en",
       targetLanguageIds: ["zh-CN"],
     },
-    "/projects/929237/files/24": {
-      id: 24,
+    "/projects/929237/files/36": {
+      id: 36,
       projectId: 929237,
       name: "messages.po",
       revisionId: 1,
-      branchId: 9,
+      branchId: 26,
       directoryId: 4,
     },
-    "/projects/929237/branches/9": { id: 9, name: "aidan.crowdin-private-source-20260911" },
+    "/projects/929237/branches/26": {
+      id: 26,
+      name: "aidan.crowdin-private-recording-base-20260911",
+    },
     "/projects/929237/strings": sources,
     "/projects/929237/languages/zh-CN/translations": labels.map(([, , text], index) => ({
       stringId: index + 1,
@@ -68,7 +71,7 @@ function syntheticApi(change = () => {}) {
     records[`/projects/929237/directories/${index + 1}`] = {
       id: index + 1,
       name,
-      branchId: 9,
+      branchId: 26,
       directoryId: index || null,
     };
   });
@@ -181,14 +184,14 @@ it.each([
   ],
   [
     "wrong file",
-    "/files/24",
+    "/files/36",
     (data) => {
       data.id = 14;
     },
   ],
   [
     "wrong branch",
-    "/branches/9",
+    "/branches/26",
     (data) => {
       data.name = "main";
     },
@@ -262,7 +265,7 @@ it("rejects a source revision change within a read", async () => {
       token: "synthetic-token",
       now,
       fetchImpl: syntheticApi((data, path) => {
-        if (path.endsWith("/files/24")) data.revisionId = ++revision;
+        if (path.endsWith("/files/36")) data.revisionId = ++revision;
       }),
     }),
   ).rejects.toThrow(/file changed/);
@@ -359,4 +362,19 @@ it("bounds the time spent reading a stalled response body", async () => {
   } finally {
     vi.useRealTimers();
   }
+});
+
+it.each(["file", "branch"])("rejects an old native %s", async (kind) => {
+  await expect(
+    collectPrivateReviewSnapshot({
+      token: "synthetic-token",
+      now,
+      fetchImpl: syntheticApi((data, path) => {
+        if (path.endsWith("/files/36")) {
+          if (kind === "file") data.id = 24;
+          else data.branchId = 9;
+        }
+      }),
+    }),
+  ).rejects.toThrow();
 });

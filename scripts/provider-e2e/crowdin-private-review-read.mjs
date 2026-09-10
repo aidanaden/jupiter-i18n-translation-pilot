@@ -7,7 +7,7 @@ const timestamp = z.iso.datetime({ offset: true });
 const sourceSchema = z.object({
   id,
   projectId: z.literal(929237),
-  fileId: z.literal(24),
+  fileId: z.literal(36),
   identifier: z.string(),
   text: z.string(),
   createdAt: timestamp,
@@ -135,18 +135,18 @@ export async function collectPrivateReviewSnapshot({
       (await get("")).data,
     );
     const fileSchema = z.object({
-      id: z.literal(24),
+      id: z.literal(36),
       projectId: z.literal(929237),
       name: z.literal("messages.po"),
       revisionId: id,
-      branchId: id,
+      branchId: z.literal(26),
       directoryId: id,
     });
-    const file = z.parse(fileSchema, (await get("/files/24")).data);
+    const file = z.parse(fileSchema, (await get("/files/36")).data);
     const branch = z.parse(
       z.object({
         id: z.literal(file.branchId),
-        name: z.literal("aidan.crowdin-private-source-20260911"),
+        name: z.literal("aidan.crowdin-private-recording-base-20260911"),
       }),
       (await get(`/branches/${file.branchId}`)).data,
     );
@@ -164,15 +164,15 @@ export async function collectPrivateReviewSnapshot({
       directoryId = directory.directoryId;
     }
     if (directoryId !== null && directoryId !== 0) throw new Error("Unexpected parent directory");
-    const sources = await list("/strings?fileId=24", sourceSchema, "id");
+    const sources = await list("/strings?fileId=36", sourceSchema, "id");
     if (sources.length !== 19 || new Set(sources.map((source) => source.identifier)).size !== 19)
       throw new Error("Expected 19 distinct sources");
     const translations = await list(
-      "/languages/zh-CN/translations?fileId=24",
+      "/languages/zh-CN/translations?fileId=36",
       translationSchema,
       "stringId",
     );
-    const approvals = await list("/approvals?languageId=zh-CN&fileId=24", approvalSchema, "id");
+    const approvals = await list("/approvals?languageId=zh-CN&fileId=36", approvalSchema, "id");
     const sourceIds = new Set(sources.map((source) => source.id));
     if ([...translations, ...approvals].some((record) => !sourceIds.has(record.stringId)))
       throw new Error("Unknown source reference");
@@ -210,12 +210,12 @@ export async function collectPrivateReviewSnapshot({
         approvedAt: approval.createdAt,
       };
     });
-    const finalFile = z.parse(fileSchema, (await get("/files/24")).data);
+    const finalFile = z.parse(fileSchema, (await get("/files/36")).data);
     if (JSON.stringify(file) !== JSON.stringify(finalFile))
       throw new Error("Native file changed during read");
     return {
       projectId: 929237,
-      fileId: 24,
+      fileId: 36,
       branchName: branch.name,
       revision: file.revisionId,
       entries,

@@ -12,8 +12,8 @@ const id = z.number().check(z.int(), z.positive());
 const timestamp = z.iso.datetime({ offset: true });
 const stateSchema = z.strictObject({
   projectId: z.literal(929237),
-  fileId: z.literal(24),
-  branchName: z.literal("aidan.crowdin-private-source-20260911"),
+  fileId: z.literal(36),
+  branchName: z.literal("aidan.crowdin-private-recording-base-20260911"),
   revision: id,
   entries: z
     .array(
@@ -88,7 +88,7 @@ export function checkPrivateReview(input) {
   return {
     status: "review-evidence-consistent",
     projectId: 929237,
-    fileId: 24,
+    fileId: 36,
     reviewedMessages: 6,
     reviewerDisclosure: "Automated test reviewer. No human language review.",
     humanApprovalProved: false,

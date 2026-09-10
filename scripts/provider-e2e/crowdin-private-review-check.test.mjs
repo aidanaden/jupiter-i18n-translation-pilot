@@ -13,8 +13,8 @@ function fixture() {
   ];
   const state = {
     projectId: 929237,
-    fileId: 24,
-    branchName: "aidan.crowdin-private-source-20260911",
+    fileId: 36,
+    branchName: "aidan.crowdin-private-recording-base-20260911",
     revision: 1,
     entries: labels.map(([key, source, translation], index) => ({
       identifier: `swap.form.${key}`,

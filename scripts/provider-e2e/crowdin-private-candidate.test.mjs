@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { preparePrivateCandidate, verifyPrivateCandidate } from "./crowdin-private-candidate.mjs";
 
-const baseSha = "be101fae90c42554de45deb5393b19771aa1318f";
+const baseSha = "e03b669d78b0e4704cb7640c2e1531867f47a835";
 const sourcePo = execFileSync("git", ["show", `${baseSha}:src/i18n/locales/en/messages.po`], {
   encoding: "utf8",
 });
@@ -27,8 +27,8 @@ function syntheticEvidence() {
   ];
   const state = {
     projectId: 929237,
-    fileId: 24,
-    branchName: "aidan.crowdin-private-source-20260911",
+    fileId: 36,
+    branchName: "aidan.crowdin-private-recording-base-20260911",
     revision: 1,
     entries: labels.map(([key, source, translation], index) => ({
       identifier: `swap.form.${key}`,
@@ -75,7 +75,7 @@ function candidateInput() {
   ];
   return {
     repository: "aidanaden/jupiter-i18n-translation-pilot",
-    baseBranch: "aidan/crowdin-private-source-20260911",
+    baseBranch: "aidan/crowdin-private-recording-base-20260911",
     baseSha,
     currentBaseSha: baseSha,
     mergeBase: baseSha,

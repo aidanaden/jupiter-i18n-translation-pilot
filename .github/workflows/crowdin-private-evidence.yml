@@ -3,7 +3,7 @@ name: crowdin-private-evidence
 on:
   push:
     branches:
-      - aidan/crowdin-private-delivery-20260911
+      - aidan/crowdin-private-recording-delivery-20260911
 
 permissions:
   contents: read
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   prepare:
-    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event_name == 'push' && github.ref == 'refs/heads/aidan/crowdin-private-delivery-20260911'
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event_name == 'push' && github.ref == 'refs/heads/aidan/crowdin-private-recording-delivery-20260911'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -26,11 +26,11 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Verify PR 35 and native review without delivery authority
+      - name: Prepare fresh native review evidence without delivery authority
         env:
           GH_TOKEN: ${{ github.token }}
           CROWDIN_PRIVATE_RECORDING_TOKEN: ${{ secrets.CROWDIN_PRIVATE_RECORDING_TOKEN }}
-        run: node scripts/provider-e2e/crowdin-private-cli.mjs "$RUNNER_TEMP/crowdin-private-prepared"
+        run: node scripts/provider-e2e/crowdin-private-cli.mjs --prepare "$RUNNER_TEMP/crowdin-private-prepared"
       - uses: actions/upload-artifact@v4
         with:
           name: crowdin-private-prepared-${{ github.run_id }}-${{ github.run_attempt }}

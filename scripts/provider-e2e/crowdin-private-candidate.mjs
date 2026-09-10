@@ -92,12 +92,12 @@ export function verifyPrivateCandidate(input) {
     input;
   if (
     repository !== "aidanaden/jupiter-i18n-translation-pilot" ||
-    baseBranch !== "aidan/crowdin-private-source-20260911"
+    baseBranch !== "aidan/crowdin-private-recording-base-20260911"
   ) {
     throw new Error("Wrong repository or base branch");
   }
   if (
-    baseSha !== "be101fae90c42554de45deb5393b19771aa1318f" ||
+    baseSha !== "e03b669d78b0e4704cb7640c2e1531867f47a835" ||
     currentBaseSha !== baseSha ||
     mergeBase !== baseSha ||
     !z.safeParse(z.string().check(z.regex(/^[a-f0-9]{40}$/u)), headSha).success ||
