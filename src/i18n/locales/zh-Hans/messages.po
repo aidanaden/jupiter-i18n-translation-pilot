@@ -15,66 +15,96 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as SOL, USDC, Apple Pay, Google Pay, USD, and EUR.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.buy-description"
 msgstr "使用 {applePay}、{googlePay} 或信用卡，以 {USD}、{EUR} 等当地货币购买 {SOL} 或 {USDC}"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.buy-title"
 msgstr "用本地货币购买加密货币"
 
 #. Onboard method description captured from the pinned Jupiter baseline. Protected placeholders render as Coinbase, Binance, and Solana.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.cex-description"
 msgstr "直接从 {coinbase} 或 {binance} 等交易所将您的加密资金转移到 {solana} 钱包"
 
 #. Onboard method title captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.cex-title"
 msgstr "从交易所转入资金"
 
 #. Onboard section heading captured from the pinned Jupiter baseline.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.more-ways"
 msgstr "更多存入方式"
 
 #. Onboard page subtitle captured from the pinned Jupiter baseline. The protected placeholder renders as Solana.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.subtitle"
 msgstr "在 {solana} 上开始使用的最简单方式"
 
 #. Onboard page title captured from the pinned Jupiter baseline. The protected placeholder renders as Jupiter.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.onboard.title"
 msgstr "通过 {jupiter} 存入"
 
 #. Primary action that opens the fixed swap review in the translation sandbox.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "baseline.swap.review"
 msgstr "检查兑换"
 
 #. Synthetic proof message used only by the autonomous end-to-end translation rehearsal.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "pilot.recording.proof"
 msgstr "源文本更新后，AI 翻译会自动开始"
 
 #. Sandbox-only empty state shown without a network request.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.onboard.unavailable"
 msgstr "此预览中没有可用的存入方式。"
 
 #. Sandbox-only ICU select. Preserve the walletState variable.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.onboard.wallet-state"
 msgstr "{walletState, select, new {设置您的第一个钱包} funded {向您的钱包添加资金} other {查看您的钱包}}"
 
 #. Number of synthetic markets used by the fixed route. Preserve the routeCount variable.
-#: src/i18n/messages.ts:
+#: src/i18n/messages.ts
 msgid "sandbox.swap.market-count"
 msgstr "{routeCount, plural, other {此路线使用 # 个市场}}。"
 
 #. Sandbox-only guidance. Preserve the link rich-text placeholder.
-#: src/components/SwapExample.tsx:
+#: src/components/SwapExample.tsx
 msgid "sandbox.translation.guide"
 msgstr "编辑占位符前请阅读 <link>翻译指南</link>。"
+
+#. Available token balance beside a swap input. Preserve the {balance} placeholder exactly; it is a preformatted amount, not text to translate.
+#: src/i18n/messages.ts
+msgid "swap.form.balance"
+msgstr ""
+
+#. Swap order-type tab for an order with a specified execution price. Limit means a limit order, not a spending cap.
+#: src/i18n/messages.ts
+msgid "swap.form.limit"
+msgstr ""
+
+#. Swap order-type tab for an immediate swap at the current market quote. Market means an order type, not a marketplace.
+#: src/i18n/messages.ts
+msgid "swap.form.market"
+msgstr ""
+
+#. Swap form label above the token amount the user will spend. Token symbols and amounts are rendered separately and must not be translated.
+#: src/i18n/messages.ts
+msgid "swap.form.pay"
+msgstr ""
+
+#. Swap form label above the quoted token amount the user will receive. This is a quote, not a guaranteed amount.
+#: src/i18n/messages.ts
+msgid "swap.form.receive"
+msgstr ""
+
+#. Swap order-type tab for repeated scheduled orders. Use the team's preferred term for recurring investment orders.
+#: src/i18n/messages.ts
+msgid "swap.form.recurring"
+msgstr ""
