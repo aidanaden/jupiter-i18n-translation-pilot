@@ -7,44 +7,74 @@ import { fileURLToPath } from "node:url";
 
 export const sourceScope = Object.freeze({
   repository: "aidanaden/jupiter-i18n-translation-pilot",
-  taskRef: "refs/heads/aidan/crowdin-ai-visible-source-check-20260910",
-  number: 33,
+  taskRef: "refs/heads/aidan/crowdin-realistic-source-check-20260910",
+  number: 34,
   baseBranch: "aidan/provider-e2e-crowdin-ai-base",
-  baseSha: "dea6d47fba3d33d876ecb7dad763fe76385c102e",
-  baseTree: "9359fcb997f739f855f6f7b698d61af64e644ac6",
-  headBranch: "aidan/crowdin-ai-visible-source-20260910",
-  headSha: "1abaf338ff8dd129c2abb4c14ff7a9bc26bcba05",
-  headTree: "e6b6804ccb711d0cb85668b3d2b6574e4d244582",
+  baseSha: "2d0b186918c095be3b8f91884d6e0ce3c1f7141e",
+  baseTree: "e6b6804ccb711d0cb85668b3d2b6574e4d244582",
+  headBranch: "aidan/crowdin-realistic-swap-20260910",
+  headSha: "153b16afe2e36754f7cf0ab71944421f063fa161",
+  headTree: "d15a612d6366104af6fa76ea492a03815a346130",
   files: Object.freeze([
     Object.freeze({
+      path: "scripts/provider-e2e/app-catalog-cli.test.mjs",
+      blob: "eb6bd75d4cb9f9dc765b4994941878ce4ceff19f",
+      size: 3541,
+    }),
+    Object.freeze({
+      path: "scripts/provider-e2e/app-cycle.test.mjs",
+      blob: "9aeb77ae90db93d0529a89bc36a3d67185bfcc6d",
+      size: 8465,
+    }),
+    Object.freeze({
+      path: "scripts/provider-e2e/full-app-review.test.mjs",
+      blob: "8ee6005717942aa4af709e53d833738bcc11f9c3",
+      size: 34808,
+    }),
+    Object.freeze({
+      path: "src/components/SwapExample.tsx",
+      blob: "0862aa091ab36a9109a1bb412fd44c1e1da99b2f",
+      size: 7646,
+    }),
+    Object.freeze({
+      path: "src/i18n/locales/en-XA/messages.po",
+      blob: "05ebc2942c1156da286b2bef98ee11c3ca422fb9",
+      size: 3583,
+    }),
+    Object.freeze({
       path: "src/i18n/locales/en-XA/messages.ts",
-      blob: "56129e0991e2b7a3c970056b4b915fa062b8bf2a",
-      size: 2282,
+      blob: "04a1757cc07216ac9d4aeca57f4efce4214b3594",
+      size: 2591,
     }),
     Object.freeze({
       path: "src/i18n/locales/en/messages.po",
-      blob: "fc78e7166cbf51d6464188f2c8c1f7c83a1d1adc",
-      size: 3206,
+      blob: "58350d0295a569f236687efd14bc897e6bd5e349",
+      size: 4376,
     }),
     Object.freeze({
       path: "src/i18n/locales/en/messages.ts",
-      blob: "6ef70499c761a42416b0c53c0c41fe5477ba6067",
-      size: 1399,
+      blob: "1191fea9e8d8f2e704fa0648c23dd8c3caf83569",
+      size: 1602,
+    }),
+    Object.freeze({
+      path: "src/i18n/locales/zh-Hans/messages.po",
+      blob: "4acc26657404dd4829f9f445ab9da39d690f6afb",
+      size: 4260,
     }),
     Object.freeze({
       path: "src/i18n/locales/zh-Hans/messages.ts",
-      blob: "e4d7a41a92ce2f81ed1b7cbb2e3adff4c55553e4",
-      size: 1329,
+      blob: "aa6051315bf4589719004a6a820c104fd1d4dd0e",
+      size: 1532,
     }),
     Object.freeze({
       path: "src/i18n/messages.ts",
-      blob: "2690ae8e7c7544b2fffb95613a03d197debfa198",
-      size: 3513,
+      blob: "7b15a6f344d2eee74c97863fa96bdd3ef296d5ea",
+      size: 4972,
     }),
   ]),
-  runId: 34416174286,
-  jobId: 102681433563,
-  checkSuiteId: 93235775352,
+  runId: 34498134106,
+  jobId: 102941749960,
+  checkSuiteId: 93455191949,
   appId: 15368,
 });
 const prefix = `/repos/${sourceScope.repository}`;
@@ -157,7 +187,7 @@ export function verifySourceCheck({
     body: Object.freeze({
       state: "success",
       context: "crowdin-ai-delivery",
-      description: "Verified PR33 source update; not translation approval",
+      description: "Verified PR34 source update; not translation approval",
       target_url: `https://github.com/${sourceScope.repository}/actions/runs/${sourceScope.runId}`,
     }),
   });
@@ -242,14 +272,14 @@ export async function runSourceCheck({
   await response.body?.cancel();
   await summary(
     env.GITHUB_STEP_SUMMARY,
-    `Verified source-only change for PR33 at ${sourceScope.headSha}. Only ${sourceScope.files.map((file) => file.path).join(", ")} changed. Exact CI verify check ${sourceScope.jobId} passed under Actions app 15368. Chinese PO unchanged. Not translation approval. No provider access, merge, deployment, or branch protection change.\n`,
+    `Verified source-only change for PR34 at ${sourceScope.headSha}. Only ${sourceScope.files.map((file) => file.path).join(", ")} changed. Exact CI verify check ${sourceScope.jobId} passed under Actions app 15368. Existing Chinese translations retained; six new entries blank. Not translation approval. No provider access, merge, deployment, or branch protection change.\n`,
   );
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runSourceCheck().catch(() => {
     process.stderr.write(
-      "Authorized PR33 source check failed validation or status publication. No credential or response content was logged.\n",
+      "Authorized PR34 source check failed validation or status publication. No credential or response content was logged.\n",
     );
     process.exitCode = 1;
   });
