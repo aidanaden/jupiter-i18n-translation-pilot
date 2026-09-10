@@ -399,7 +399,7 @@ it("keeps old CI behavior outside the exact Crowdin AI base", () => {
     "deploy:dry-run",
   ]) {
     expect(steps.find((step) => step.run === `pnpm run ${run}`).if).toBe(
-      "github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')",
+      "github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911' && github.base_ref != 'aidan/crowdin-private-recording-base-20260911')",
     );
   }
   for (const run of ["verify:ssr:lingo-e2e", "verify:lingo-e2e:dry-run"]) {
