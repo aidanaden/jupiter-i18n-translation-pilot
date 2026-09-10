@@ -13,6 +13,7 @@
     "verify:lingo-e2e:dry-run": "pnpm run build:lingo-e2e && wrangler deploy --dry-run --config dist-lingo-e2e/server/wrangler.json --outdir .wrangler/lingo-e2e-dry-run",
     "verify:crowdin-ai-e2e:dry-run": "pnpm run build:crowdin-ai-e2e && wrangler deploy --dry-run --config dist-crowdin-ai-e2e/server/wrangler.json --outdir .wrangler/crowdin-ai-e2e-dry-run",
     "verify:ssr:lingo-e2e": "pnpm run build:lingo-e2e && node scripts/verify-ssr.mjs --lingo-e2e && oxfmt src/routeTree.gen.ts",
+    "verify:ssr:crowdin-private": "pnpm run build:crowdin-ai-e2e && node scripts/verify-crowdin-private-ssr.mjs && oxfmt src/routeTree.gen.ts",
     "dev": "vite dev",
     "format:check": "oxfmt --check",
     "format:fix": "oxfmt",
