@@ -1,7 +1,10 @@
 import { expect, it, vi } from "vitest";
 
 import { checkPrivateReview } from "./crowdin-private-review-check.mjs";
-import { collectPrivateReviewSnapshot } from "./crowdin-private-review-read.mjs";
+import {
+  collectPrivateReviewSnapshot,
+  MissingCurrentReviewApprovalError,
+} from "./crowdin-private-review-read.mjs";
 
 function syntheticApi(change = () => {}) {
   const labels = [
@@ -95,6 +98,36 @@ function syntheticApi(change = () => {}) {
 }
 
 const now = () => "2026-09-11T01:03:00Z";
+
+it.each([
+  "missing translation",
+  "missing source",
+  "plural",
+  "duplicate approval",
+  "missing approval",
+])("reports missing review only when the current translation exists: %s", async (failure) => {
+  const error = await collectPrivateReviewSnapshot({
+    token: "synthetic-token",
+    now,
+    fetchImpl: syntheticApi((data, path) => {
+      if (failure === "missing translation" && path.endsWith("/translations")) data.shift();
+      if (failure === "missing source" && path.endsWith("/strings")) data[0].identifier = "other";
+      if (failure === "plural" && path.endsWith("/translations")) {
+        const value = data[0];
+        data[0] = {
+          stringId: value.stringId,
+          contentType: "text/plain",
+          plurals: [{ ...value, pluralForm: "other" }],
+        };
+      }
+      if (failure === "duplicate approval" && path.endsWith("/approvals"))
+        data.push({ ...data[0], id: 999 });
+      if (failure === "missing approval" && path.endsWith("/approvals")) data.shift();
+    }),
+  }).catch((value) => value);
+  expect(error).toBeInstanceOf(Error);
+  expect(error instanceof MissingCurrentReviewApprovalError).toBe(failure === "missing approval");
+});
 
 it("rejects a selected translation with an unsupported content type", async () => {
   await expect(

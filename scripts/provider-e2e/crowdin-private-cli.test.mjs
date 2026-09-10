@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { expect, it } from "vitest";
 import { parse } from "yaml";
 
-import { runPrivatePreparation } from "./crowdin-private-cli.mjs";
+import { privatePreparationFailureMessage, runPrivatePreparation } from "./crowdin-private-cli.mjs";
 
 const sha = "a".repeat(40);
 const base = "e03b669d78b0e4704cb7640c2e1531867f47a835";
@@ -319,7 +319,21 @@ it("reaches missing fresh approvals without querying a PR or CI", async () => {
   await expect(runPrivatePreparation(input)).rejects.toThrow(
     "Missing unique current review approval",
   );
+  const failure = await runPrivatePreparation(input).catch((error) => error);
+  expect(privatePreparationFailureMessage(failure)).toBe(
+    "PRIVATE_REVIEW_MISSING: Current test-review approval is missing. No delivery was authorized.\n",
+  );
   expect(requests.some((url) => url.includes("/files/36"))).toBe(true);
   expect(requests.some((url) => url.includes("/approvals?languageId=zh-CN&fileId=36"))).toBe(true);
   await expect(stat(outputDir)).rejects.toThrow();
+});
+
+it.each([
+  new Error("synthetic-secret"),
+  { code: "PRIVATE_REVIEW_MISSING", message: "synthetic-secret" },
+  null,
+])("does not disclose unknown failures or trust a supplied code", (failure) => {
+  expect(privatePreparationFailureMessage(failure)).toBe(
+    "Private preparation refused. No delivery was authorized.\n",
+  );
 });

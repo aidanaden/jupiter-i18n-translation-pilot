@@ -42,6 +42,12 @@ const identifiers = ["balance", "limit", "market", "pay", "receive", "recurring"
 );
 const projectPath = "/projects/929237";
 
+export class MissingCurrentReviewApprovalError extends Error {
+  constructor() {
+    super("Missing unique current review approval");
+  }
+}
+
 export async function collectPrivateReviewSnapshot({
   token,
   fetchImpl = fetch,
@@ -190,10 +196,12 @@ export async function collectPrivateReviewSnapshot({
           value.translationId === translation?.translationId &&
           value.user.id === 17853021,
       );
-      if (!source || !translation || translation.plurals || matching.length !== 1)
-        throw new Error("Missing unique current review approval");
+      if (!source || !translation || translation.plurals)
+        throw new Error("Missing or unsupported current translation");
       if (translation.contentType !== "text/plain")
         throw new Error("Unsupported selected translation content type");
+      if (matching.length === 0) throw new MissingCurrentReviewApprovalError();
+      if (matching.length !== 1) throw new Error("Ambiguous current review approval");
       const [approval] = matching;
       return {
         identifier,

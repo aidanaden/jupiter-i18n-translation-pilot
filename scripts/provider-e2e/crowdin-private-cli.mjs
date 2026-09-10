@@ -7,7 +7,10 @@ import { promisify } from "node:util";
 import * as z from "zod/v4-mini";
 
 import { preparePrivateCandidate } from "./crowdin-private-candidate.mjs";
-import { collectPrivateReviewSnapshot } from "./crowdin-private-review-read.mjs";
+import {
+  collectPrivateReviewSnapshot,
+  MissingCurrentReviewApprovalError,
+} from "./crowdin-private-review-read.mjs";
 
 const repository = "aidanaden/jupiter-i18n-translation-pilot";
 const ref = "refs/heads/aidan/crowdin-private-recording-delivery-20260911";
@@ -101,12 +104,18 @@ export async function runPrivatePreparation({
   return receipt;
 }
 
+export function privatePreparationFailureMessage(error) {
+  return error instanceof MissingCurrentReviewApprovalError
+    ? "PRIVATE_REVIEW_MISSING: Current test-review approval is missing. No delivery was authorized.\n"
+    : "Private preparation refused. No delivery was authorized.\n";
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runPrivatePreparation({
     outputDir:
       process.argv.length === 4 && process.argv[2] === "--prepare" ? process.argv[3] : undefined,
-  }).catch(() => {
-    process.stderr.write("Private preparation refused. No delivery was authorized.\n");
+  }).catch((error) => {
+    process.stderr.write(privatePreparationFailureMessage(error));
     process.exitCode = 1;
   });
 }
