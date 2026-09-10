@@ -1,6 +1,15 @@
 import { Trans, useLingui } from "@lingui/react";
 
-import { REVIEW_SWAP_MESSAGE, ROUTE_MARKET_COUNT_MESSAGE } from "../i18n/messages";
+import {
+  REVIEW_SWAP_MESSAGE,
+  ROUTE_MARKET_COUNT_MESSAGE,
+  SWAP_BALANCE_MESSAGE,
+  SWAP_LIMIT_MESSAGE,
+  SWAP_MARKET_MESSAGE,
+  SWAP_PAY_MESSAGE,
+  SWAP_RECEIVE_MESSAGE,
+  SWAP_RECURRING_MESSAGE,
+} from "../i18n/messages";
 import { SandboxMessageId } from "../message-metadata";
 import type { SandboxMessageId as SandboxMessageIdValue } from "../message-metadata";
 
@@ -39,10 +48,14 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-5">
             <span className="border-b-2 border-primary pb-2 text-sm font-semibold text-neutral-100">
-              Market
+              {i18n._(SWAP_MARKET_MESSAGE)}
             </span>
-            <span className="pb-2 text-sm font-medium text-neutral-500">Limit</span>
-            <span className="pb-2 text-sm font-medium text-neutral-500">Recurring</span>
+            <span className="pb-2 text-sm font-medium text-neutral-500">
+              {i18n._(SWAP_LIMIT_MESSAGE)}
+            </span>
+            <span className="pb-2 text-sm font-medium text-neutral-500">
+              {i18n._(SWAP_RECURRING_MESSAGE)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="bg-primary/10 rounded-md px-2 py-1 text-[11px] font-semibold text-primary">
@@ -59,7 +72,7 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
 
         <TokenField
           amount="1.00"
-          label="You pay"
+          label={i18n._(SWAP_PAY_MESSAGE)}
           symbol="SOL"
           tokenClassName="from-[#9945ff] to-[#14f195]"
           usd="$142.81"
@@ -74,7 +87,7 @@ export const SwapExample: React.FC<SwapExampleProps> = ({
         </div>
         <TokenField
           amount="142.36"
-          label="You receive"
+          label={i18n._(SWAP_RECEIVE_MESSAGE)}
           symbol="USDC"
           tokenClassName="from-[#2775ca] to-[#66a3e0]"
           usd="$142.36"
@@ -163,11 +176,12 @@ type TokenFieldProps = {
 };
 
 const TokenField: React.FC<TokenFieldProps> = ({ amount, label, symbol, tokenClassName, usd }) => {
+  const { i18n } = useLingui();
   return (
     <div className="rounded-2xl bg-big-input px-4 py-5">
       <div className="flex items-center justify-between text-xs text-neutral-500">
         <span>{label}</span>
-        <span>Balance 12.40</span>
+        <span>{i18n._({ ...SWAP_BALANCE_MESSAGE, values: { balance: "12.40" } })}</span>
       </div>
       <div className="mt-5 flex items-center justify-between gap-4">
         <div>

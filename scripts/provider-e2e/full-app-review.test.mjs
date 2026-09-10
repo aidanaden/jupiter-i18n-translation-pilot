@@ -31,8 +31,12 @@ const pinnedTarget = execFileSync("git", ["show", `${resetBaselineSha}:${target}
 
 async function fixture(pinnedSourcePo) {
   const sourcePo =
-    pinnedSourcePo ?? (await readFile(new URL(`../../${source}`, import.meta.url), "utf8"));
-  const baselineTargetPo = await readFile(new URL(`../../${target}`, import.meta.url), "utf8");
+    pinnedSourcePo ??
+    execFileSync("git", ["show", `${resetBaselineSha}:${source}`], {
+      cwd: new URL("../../", import.meta.url),
+      encoding: "utf8",
+    });
+  const baselineTargetPo = pinnedTarget;
   const messages = poToLingoJson(sourcePo, { expectedMessageCount: 13 });
   const rawTargetPo = lingoJsonToPo(
     sourcePo,
