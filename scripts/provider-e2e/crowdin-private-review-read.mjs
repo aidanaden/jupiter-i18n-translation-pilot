@@ -192,6 +192,8 @@ export async function collectPrivateReviewSnapshot({
       );
       if (!source || !translation || translation.plurals || matching.length !== 1)
         throw new Error("Missing unique current review approval");
+      if (translation.contentType !== "text/plain")
+        throw new Error("Unsupported selected translation content type");
       const [approval] = matching;
       return {
         identifier,

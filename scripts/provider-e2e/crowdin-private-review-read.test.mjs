@@ -51,7 +51,7 @@ function syntheticApi(change = () => {}) {
       stringId: index + 1,
       translationId: index + 21,
       text,
-      contentType: "text",
+      contentType: "text/plain",
       user: { id: 1000 },
       createdAt: "2026-09-11T01:01:00Z",
     })),
@@ -92,6 +92,18 @@ function syntheticApi(change = () => {}) {
 }
 
 const now = () => "2026-09-11T01:03:00Z";
+
+it("rejects a selected translation with an unsupported content type", async () => {
+  await expect(
+    collectPrivateReviewSnapshot({
+      token: "synthetic-token",
+      now,
+      fetchImpl: syntheticApi((data, path) => {
+        if (path.endsWith("/translations")) data[0].contentType = "text/html";
+      }),
+    }),
+  ).rejects.toThrow(/content type/);
+});
 
 it("maps 19 synthetic sources to six current approved translations without delivery authority", async () => {
   const result = await collectPrivateReviewSnapshot({
