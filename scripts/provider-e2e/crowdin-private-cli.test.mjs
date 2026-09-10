@@ -134,6 +134,149 @@ it("writes only a private candidate, native evidence, and a receipt with no deli
   });
 });
 
+function liveInputs(outputDir) {
+  const input = inputs(outputDir);
+  const command = input.command;
+  const head = "73b5446d667169407a704d1113ce18966dd80d5a";
+  const repository = "aidanaden/jupiter-i18n-translation-pilot";
+  const baseRef = {
+    sha: base,
+    ref: "aidan/crowdin-private-recording-base-20260911",
+    repo: { full_name: repository, id: 1347944533 },
+  };
+  const headRef = {
+    sha: head,
+    ref: "aidan/crowdin-private-recording-candidate-20260911",
+    repo: { full_name: repository, id: 1347944533 },
+  };
+  input.verifyLive = true;
+  input.command = async (program, args) => {
+    const path = args.at(-1);
+    if (program === "gh" && path.endsWith("pulls/38"))
+      return JSON.stringify({
+        number: 38,
+        state: "open",
+        merged: false,
+        draft: false,
+        base: baseRef,
+        head: headRef,
+        merge_commit_sha: "ae3e5c787ddd7c0d6135ce74afe7a39e83b8a0cf",
+      });
+    if (program === "gh" && path.includes("actions/runs"))
+      return JSON.stringify({
+        id: 34538979391,
+        head_sha: head,
+        event: "pull_request",
+        path: ".github/workflows/ci.yml",
+        head_branch: headRef.ref,
+        check_suite_id: 93568362706,
+        status: "completed",
+        conclusion: "success",
+        repository: { full_name: repository },
+        pull_requests: [{ number: 38, base: baseRef, head: headRef }],
+      });
+    if (program === "gh" && path.includes("check-runs"))
+      return JSON.stringify({
+        total_count: 1,
+        check_runs: [
+          {
+            id: 103077036389,
+            name: "verify",
+            head_sha: head,
+            app: { id: 15368, slug: "github-actions" },
+            status: "completed",
+            conclusion: "success",
+            check_suite: { id: 93568362706 },
+            details_url: `https://github.com/${repository}/actions/runs/34538979391/job/103077036389`,
+          },
+        ],
+      });
+    if (program === "git" && ["ls-tree", "merge-base"].includes(args[0]))
+      return execFileSync(program, args, { encoding: "utf8" });
+    return command(program, args);
+  };
+  return input;
+}
+
+it("verifies the real complete candidate Git tree with fresh native review and bound CI", async () => {
+  const outputDir = join(await mkdtemp(join(tmpdir(), "private-live-test-")), "output");
+  const receipt = await runPrivatePreparation(liveInputs(outputDir));
+  expect(receipt).toMatchObject({
+    status: "live-candidate-verified",
+    liveVerificationPerformed: true,
+    headSha: "73b5446d667169407a704d1113ce18966dd80d5a",
+    baseSha: base,
+    pullRequestNumber: 38,
+    deliveryAllowed: false,
+    mergeAllowed: false,
+    deploymentAllowed: false,
+    atomicSnapshot: false,
+    approvalTimeContentProved: false,
+    recheckRequiredBeforeDelivery: true,
+    ci: { runId: 34538979391 },
+  });
+});
+
+it.each([
+  "moved PR",
+  "unrelated tree",
+  "stale evidence",
+  "failed CI",
+  "wrong CI head",
+  "old CI base",
+  "missing check",
+  "fake check app",
+  "second CI failed",
+  "missing native approval",
+])("live verification writes no receipt for %s", async (failure) => {
+  const outputDir = join(await mkdtemp(join(tmpdir(), "private-live-test-")), "output");
+  const input = liveInputs(outputDir);
+  if (failure === "missing native approval") {
+    const fetchImpl = input.fetchImpl;
+    input.fetchImpl = (url, options) =>
+      url.includes("/approvals?")
+        ? Response.json({ data: [], pagination: { offset: 0, limit: 100 } })
+        : fetchImpl(url, options);
+  }
+  const command = input.command;
+  let prReads = 0;
+  let ciReads = 0;
+  input.command = async (program, args) => {
+    const result = await command(program, args);
+    const path = args.at(-1);
+    if (program === "gh" && path.endsWith("pulls/38")) {
+      prReads += 1;
+      if (failure === "moved PR" && prReads === 2)
+        return JSON.stringify({ ...JSON.parse(result), merge_commit_sha: "b".repeat(40) });
+    }
+    if (program === "gh" && path.includes("actions/runs")) {
+      ciReads += 1;
+      const run = JSON.parse(result);
+      if (failure === "failed CI" || (failure === "second CI failed" && ciReads === 2))
+        run.conclusion = "failure";
+      if (failure === "wrong CI head") run.head_sha = "b".repeat(40);
+      if (failure === "old CI base") run.pull_requests[0].base.sha = "b".repeat(40);
+      return JSON.stringify(run);
+    }
+    if (program === "gh" && path.includes("check-runs")) {
+      const value = JSON.parse(result);
+      if (failure === "missing check") {
+        value.total_count = 0;
+        value.check_runs = [];
+      }
+      if (failure === "fake check app") value.check_runs[0].app.id = 123;
+      return JSON.stringify(value);
+    }
+    if (failure === "unrelated tree" && args[0] === "ls-tree" && path.startsWith("73b544"))
+      return result + `100644 blob ${"b".repeat(40)}\textra.txt\0`;
+    return result;
+  };
+  input.now = () =>
+    failure === "stale evidence" && prReads === 2 ? "2026-09-11T02:00:00Z" : "2026-09-11T01:03:00Z";
+  await expect(runPrivatePreparation(input)).rejects.toThrow();
+  await expect(stat(outputDir)).rejects.toThrow();
+});
+
 it.each(["base movement", "stale clock", "missing approval"])(
   "writes no output after %s",
   async (failure) => {
@@ -188,7 +331,7 @@ it("limits workflow execution to one trusted push branch with read-only authorit
   expect(job.steps[0].with).toEqual({ ref: "${{ github.sha }}", "persist-credentials": false });
   expect(job.steps.filter((step) => step.run).map((step) => step.run)).toEqual([
     "pnpm install --frozen-lockfile --ignore-scripts",
-    'node scripts/provider-e2e/crowdin-private-cli.mjs --prepare "$RUNNER_TEMP/crowdin-private-prepared"',
+    'node scripts/provider-e2e/crowdin-private-cli.mjs --verify-live "$RUNNER_TEMP/crowdin-private-prepared"',
   ]);
   expect(job.steps.at(-2).env.CROWDIN_PRIVATE_RECORDING_TOKEN).toBe(
     "${{ secrets.CROWDIN_PRIVATE_RECORDING_TOKEN }}",
@@ -295,14 +438,6 @@ it("refuses an untrusted run before reading secrets or executing commands", asyn
       },
     }),
   ).rejects.toThrow("Untrusted run");
-});
-
-it("refuses live mode until fresh candidate pins exist", async () => {
-  const input = inputs(join(await mkdtemp(join(tmpdir(), "private-cli-test-")), "output"));
-  input.verifyLive = true;
-  await expect(runPrivatePreparation(input)).rejects.toThrow(
-    "Fresh live verification is not configured",
-  );
 });
 
 it("reaches missing fresh approvals without querying a PR or CI", async () => {

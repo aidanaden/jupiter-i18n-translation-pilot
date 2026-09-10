@@ -26,11 +26,11 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Prepare fresh native review evidence without delivery authority
+      - name: Verify PR 38 and fresh native review without delivery authority
         env:
           GH_TOKEN: ${{ github.token }}
           CROWDIN_PRIVATE_RECORDING_TOKEN: ${{ secrets.CROWDIN_PRIVATE_RECORDING_TOKEN }}
-        run: node scripts/provider-e2e/crowdin-private-cli.mjs --prepare "$RUNNER_TEMP/crowdin-private-prepared"
+        run: node scripts/provider-e2e/crowdin-private-cli.mjs --verify-live "$RUNNER_TEMP/crowdin-private-prepared"
       - uses: actions/upload-artifact@v4
         with:
           name: crowdin-private-prepared-${{ github.run_id }}-${{ github.run_attempt }}

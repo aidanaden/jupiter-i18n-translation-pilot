@@ -1,10 +1,10 @@
 import * as z from "zod/v4-mini";
 
-export const privateBaseSha = "be101fae90c42554de45deb5393b19771aa1318f";
-const headSha = "93265e70610667a782e52a20d2de495e52e20ed3";
+export const privateBaseSha = "e03b669d78b0e4704cb7640c2e1531867f47a835";
+const headSha = "73b5446d667169407a704d1113ce18966dd80d5a";
 const repository = "aidanaden/jupiter-i18n-translation-pilot";
-const baseBranch = "aidan/crowdin-private-source-20260911";
-const headBranch = "aidan/crowdin-private-candidate-20260911";
+const baseBranch = "aidan/crowdin-private-recording-base-20260911";
+const headBranch = "aidan/crowdin-private-recording-candidate-20260911";
 const sha = z.string().check(z.regex(/^[a-f0-9]{40}$/u));
 const repo = z.object({ full_name: z.literal(repository) });
 const gitRef = (ref, commit) => z.object({ ref: z.literal(ref), sha: z.literal(commit), repo });
@@ -12,7 +12,7 @@ const gitRef = (ref, commit) => z.object({ ref: z.literal(ref), sha: z.literal(c
 export async function readPrivatePullRequest(command) {
   return z.parse(
     z.object({
-      number: z.literal(35),
+      number: z.literal(38),
       state: z.literal("open"),
       merged: z.literal(false),
       draft: z.literal(false),
@@ -20,14 +20,14 @@ export async function readPrivatePullRequest(command) {
       head: gitRef(headBranch, headSha),
       merge_commit_sha: sha,
     }),
-    JSON.parse(await command("gh", ["api", "--method", "GET", `repos/${repository}/pulls/35`])),
+    JSON.parse(await command("gh", ["api", "--method", "GET", `repos/${repository}/pulls/38`])),
   );
 }
 
 export async function readPrivateCi(command) {
-  const runId = 34522536375;
-  const suiteId = 93523623013;
-  const checkId = 103023298309;
+  const runId = 34538979391;
+  const suiteId = 93568362706;
+  const checkId = 103077036389;
   const success = { status: z.literal("completed"), conclusion: z.literal("success") };
   const runRef = (ref, commit) =>
     z.object({
@@ -47,7 +47,7 @@ export async function readPrivateCi(command) {
       ...success,
       pull_requests: z.tuple([
         z.object({
-          number: z.literal(35),
+          number: z.literal(38),
           base: runRef(baseBranch, privateBaseSha),
           head: runRef(headBranch, headSha),
         }),
