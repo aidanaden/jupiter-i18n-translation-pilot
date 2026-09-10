@@ -38,14 +38,18 @@ jobs:
         run: pnpm run verify:lingo-e2e:dry-run
       - if: github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-crowdin-ai-base'
         run: pnpm run build
-      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')
+      - if: github.event_name == 'pull_request' && github.base_ref == 'aidan/crowdin-private-source-20260911'
+        run: pnpm run verify:ssr:crowdin-private
+      - if: github.event_name == 'pull_request' && github.base_ref == 'aidan/crowdin-private-source-20260911'
+        run: pnpm run verify:crowdin-ai-e2e:dry-run
+      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')
         run: pnpm run verify:ssr
-      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')
+      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')
         run: pnpm run verify:rehearsal-reset-plan
-      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')
+      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')
         run: pnpm run verify:rehearsal-reset-execution
-      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')
+      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')
         run: pnpm run verify:rehearsal-translated
-      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')
+      - if: github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')
         run: pnpm run deploy:dry-run
       - run: pnpm run scheduler:deploy:dry-run

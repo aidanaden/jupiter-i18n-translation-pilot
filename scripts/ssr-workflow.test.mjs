@@ -25,6 +25,18 @@ it("isolates both provider bases and retains shared and original Crowdin verific
   expect(crowdinAi[0].if).toBe(
     "github.event_name == 'pull_request' && github.base_ref == 'aidan/provider-e2e-crowdin-ai-base'",
   );
+  const privateCrowdin = steps.filter((step) =>
+    step.if?.includes("== 'aidan/crowdin-private-source-20260911'"),
+  );
+  expect(privateCrowdin.map((step) => step.run)).toEqual([
+    "pnpm run verify:ssr:crowdin-private",
+    "pnpm run verify:crowdin-ai-e2e:dry-run",
+  ]);
+  for (const step of privateCrowdin) {
+    expect(step.if).toBe(
+      "github.event_name == 'pull_request' && github.base_ref == 'aidan/crowdin-private-source-20260911'",
+    );
+  }
   const legacy = steps.filter((step) => step.if?.includes("!= 'aidan/provider-e2e-lingo-base'"));
   expect(legacy.map((step) => step.run)).toEqual([
     "pnpm run verify:ssr",
@@ -35,7 +47,7 @@ it("isolates both provider bases and retains shared and original Crowdin verific
   ]);
   for (const step of legacy) {
     expect(step.if).toBe(
-      "github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base')",
+      "github.event_name != 'pull_request' || (github.base_ref != 'aidan/provider-e2e-lingo-base' && github.base_ref != 'aidan/provider-e2e-crowdin-ai-base' && github.base_ref != 'aidan/crowdin-private-source-20260911')",
     );
   }
   const shared = steps.filter((step) => !step.if).map((step) => step.run);
