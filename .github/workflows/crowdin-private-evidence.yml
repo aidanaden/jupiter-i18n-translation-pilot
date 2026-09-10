@@ -1,0 +1,36 @@
+name: crowdin-private-evidence
+
+on:
+  push:
+    branches:
+      - aidan/crowdin-private-delivery-20260911
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    if: github.repository == 'aidanaden/jupiter-i18n-translation-pilot' && github.event_name == 'push' && github.ref == 'refs/heads/aidan/crowdin-private-delivery-20260911'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Prepare reviewed candidate without delivery authority
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CROWDIN_PRIVATE_RECORDING_TOKEN: ${{ secrets.CROWDIN_PRIVATE_RECORDING_TOKEN }}
+        run: node scripts/provider-e2e/crowdin-private-cli.mjs "$RUNNER_TEMP/crowdin-private-prepared"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crowdin-private-prepared-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crowdin-private-prepared
+          retention-days: 7
+          if-no-files-found: error
