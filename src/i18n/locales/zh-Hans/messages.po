@@ -9,7 +9,7 @@ msgstr ""
 "Language: zh\n"
 "Project-Id-Version: crowdin-ai-recording-02\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-10 00:22\n"
+"PO-Revision-Date: 2026-09-10 16:14\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Simplified\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
@@ -83,4 +83,34 @@ msgstr "{routeCount, plural, one {This route uses # market} other {This route us
 #: src/components/SwapExample.tsx
 msgid "sandbox.translation.guide"
 msgstr "Read the <link>translation guide</link> before editing placeholders."
+
+#. Available token balance beside a swap input. Preserve the {balance} placeholder exactly; it is a preformatted amount, not text to translate.
+#: src/i18n/messages.ts
+msgid "swap.form.balance"
+msgstr "Balance {balance}"
+
+#. Swap order-type tab for an order with a specified execution price. Limit means a limit order, not a spending cap.
+#: src/i18n/messages.ts
+msgid "swap.form.limit"
+msgstr "Limit"
+
+#. Swap order-type tab for an immediate swap at the current market quote. Market means an order type, not a marketplace.
+#: src/i18n/messages.ts
+msgid "swap.form.market"
+msgstr "Market"
+
+#. Swap form label above the token amount the user will spend. Token symbols and amounts are rendered separately and must not be translated.
+#: src/i18n/messages.ts
+msgid "swap.form.pay"
+msgstr "You pay"
+
+#. Swap form label above the quoted token amount the user will receive. This is a quote, not a guaranteed amount.
+#: src/i18n/messages.ts
+msgid "swap.form.receive"
+msgstr "You receive"
+
+#. Swap order-type tab for repeated scheduled orders. Use the team's preferred term for recurring investment orders.
+#: src/i18n/messages.ts
+msgid "swap.form.recurring"
+msgstr "Recurring"
 
